@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/bt3_foreground"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/bt3_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyApplication">
+        <activity android:name=".ReviewStoreActivity" />
+        <activity android:name=".ContactActivity" />
+        <activity android:name=".CartActivity" />
+        <activity android:name=".ProductDetailActivity" />
+        <activity android:name=".WelcomeActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".ProductListActivity" />
+        <activity android:name=".RevenueActivity" />
+        <activity android:name=".AdminActivity" />
+        <activity android:name=".OrderHistoryActivity" />
+        <activity android:name=".AdminProductActivity" />
+        <activity android:name=".AddEditProductActivity" />
+        <activity android:name=".AdminReviewActivity" />
+        <activity android:name=".StoreInfoAdminActivity" />
+        <activity android:name=".OrderProductDetailActivity" />
+        <activity android:name=".FavoriteActivity" />
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".CheckoutActivity" />
+        <activity android:name=".OrderDetailActivity" />
+        <activity android:name=".AdminOrderActivity" />
+        <activity android:name=".AdminOrderDetailActivity" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

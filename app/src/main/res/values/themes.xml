@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/pink_main</item>
+        <item name="colorSecondary">@color/pink_light</item>
+        <item name="android:statusBarColor">@color/pink_dark</item>
+        <item name="colorSurface">@color/pink_bg</item>
+    </style>
+
+    <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+</resources>

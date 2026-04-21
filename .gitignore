@@ -1,0 +1,16 @@
+*.iml
+.gradle/
+.idea/
+local.properties
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+.DS_Store
+
+New folder/
+app.zip
+images/
+google-services.json
+app/google-services.json
