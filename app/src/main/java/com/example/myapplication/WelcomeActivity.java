@@ -77,9 +77,11 @@ public class WelcomeActivity extends AppCompatActivity {
 
         final String finalUsername = username;
         tvWelcome.setText("Xin chào, " + finalUsername);
+
         tvWelcome.setOnClickListener(v -> {
             startActivity(new Intent(WelcomeActivity.this, ProfileActivity.class));
         });
+
         btnMenu.setOnClickListener(v -> {
             Intent intent = new Intent(WelcomeActivity.this, ProductListActivity.class);
             intent.putExtra("username", finalUsername);
@@ -93,8 +95,7 @@ public class WelcomeActivity extends AppCompatActivity {
         });
 
         btnStoreReview.setOnClickListener(v -> {
-            Intent intent = new Intent(WelcomeActivity.this, ReviewStoreActivity.class);
-            intent.putExtra("username", finalUsername);
+            Intent intent = new Intent(WelcomeActivity.this, ReviewHistoryActivity.class);
             startActivity(intent);
         });
 
@@ -104,7 +105,7 @@ public class WelcomeActivity extends AppCompatActivity {
         });
 
         btnLogoutBox.setOnClickListener(v -> {
-            UserSession.clear(WelcomeActivity.this); // ✅ THÊM DÒNG NÀY
+            UserSession.clear(WelcomeActivity.this);
             Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
             startActivity(intent);
             finish();

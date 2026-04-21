@@ -41,7 +41,12 @@ public class AdminReviewActivity extends AppCompatActivity {
         txtFiveStarCount = findViewById(R.id.txtFiveStarCount);
         rvReviews = findViewById(R.id.rvReviews);
         rvReviews.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new AdminReviewAdapter(this, showingReviews, this::confirmDeleteReview);
+        adapter = new AdminReviewAdapter(
+                this,
+                showingReviews,
+                this::confirmDeleteReview,
+                this::toggleHiddenReview
+        );
         rvReviews.setAdapter(adapter);
         Button btnAll = findViewById(R.id.btnAll);
         Button btn1 = findViewById(R.id.btn1);
@@ -107,7 +112,8 @@ public class AdminReviewActivity extends AppCompatActivity {
 
                         Timestamp t = doc.getTimestamp("createdAt");
                         r.createdAt = t;
-
+                        Boolean hidden = doc.getBoolean("isHidden");
+                        r.isHidden = hidden != null && hidden;
                         allReviews.add(r);
                     }
 
@@ -200,5 +206,28 @@ public class AdminReviewActivity extends AppCompatActivity {
         }
 
         adapter.notifyDataSetChanged();
+    }
+    private void toggleHiddenReview(Review review) {
+        if (review == null || review.id == null || review.id.trim().isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy review", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean newValue = !review.isHidden;
+
+        db.collection("Reviews")
+                .document(review.id)
+                .update("isHidden", newValue)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(
+                            this,
+                            newValue ? "Đã ẩn đánh giá" : "Đã hiện lại đánh giá",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    loadReviews();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi cập nhật trạng thái review: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
     }
 }

@@ -11,6 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity android:name=".ReviewStoreActivity" />
+        <activity android:name=".ReviewHistoryActivity" />
         <activity android:name=".ContactActivity" />
         <activity android:name=".CartActivity" />
         <activity android:name=".ProductDetailActivity" />
