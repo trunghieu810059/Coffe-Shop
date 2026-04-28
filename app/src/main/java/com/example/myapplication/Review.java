@@ -13,7 +13,6 @@ public class Review {
     public boolean isHidden;
     public String adminNote;
     public String adminReply;
-
     public Review() {
     }
 }
