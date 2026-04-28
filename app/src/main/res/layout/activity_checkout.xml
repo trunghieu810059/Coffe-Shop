@@ -10,82 +10,62 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
+        <Button
+            android:id="@+id/btnBackCheckout"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_back_cart_round"
+            android:backgroundTint="@null"
+            android:text="← Quay lại"
+            android:textAllCaps="false"
+            android:textColor="@color/pink_dark" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="end">
+            android:layout_marginTop="12dp"
+            android:text="THANH TOÁN"
+            android:textColor="@color/pink_dark"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnBackCheckout"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_back_cart_round"
-                android:backgroundTint="@null"
-                android:text="← Quay lại"
-                android:textAllCaps="false"
-                android:textColor="@color/white" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/txtCheckoutProduct"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_form_rounded"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp"
+            android:text="Sản phẩm"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/txtCheckoutProduct"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tên sản phẩm"
-                android:textColor="@android:color/black"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txtCheckoutOption"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Thông tin món"
-                android:textColor="#666666"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/txtDiscountInfo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Chưa áp dụng mã giảm giá"
-                android:textColor="#777777"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/txtCheckoutTotal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Tổng tiền: 0đ"
-                android:textColor="@color/pink_main"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/txtCheckoutOption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_form_rounded"
+            android:padding="12dp"
+            android:text="Tùy chọn"
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
 
         <EditText
             android:id="@+id/edtReceiverName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_input_rounded"
-            android:hint="Tên người nhận"
+            android:hint="Họ và tên người nhận"
             android:padding="12dp" />
 
         <EditText
             android:id="@+id/edtReceiverPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_input_rounded"
             android:hint="Số điện thoại"
             android:inputType="phone"
@@ -94,28 +74,26 @@
         <EditText
             android:id="@+id/edtReceiverAddress"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_input_rounded"
-            android:gravity="top|start"
-            android:hint="Địa chỉ giao hàng"
+            android:hint="Địa chỉ nhận hàng"
             android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/chkSaveDefaultAddress"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Lưu làm địa chỉ mặc định" />
+            android:text="Lưu làm thông tin mặc định" />
 
         <EditText
             android:id="@+id/edtOrderNote"
             android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_input_rounded"
-            android:gravity="top|start"
-            android:hint="Ghi chú cho đơn hàng"
+            android:hint="Ghi chú đơn hàng"
             android:padding="12dp" />
 
         <LinearLayout
@@ -127,38 +105,52 @@
             <EditText
                 android:id="@+id/edtCouponCode"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/bg_input_rounded"
-                android:hint="Mã giảm giá"
+                android:hint="Nhập mã giảm giá"
                 android:padding="12dp" />
 
             <Button
                 android:id="@+id/btnApplyCoupon"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/bg_form_rounded"
+                android:background="@drawable/bg_button_pink"
                 android:backgroundTint="@null"
                 android:text="Áp dụng"
                 android:textAllCaps="false"
-                android:textColor="@color/pink_dark" />
+                android:textColor="@android:color/white" />
         </LinearLayout>
+
         <TextView
-            android:id="@+id/txtVoucherHint"
+            android:id="@+id/txtDiscountInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Mã áp dụng: GIAM10 (10%), GIAM20K (20.000đ), FREESHIP (15.000đ)"
-            android:textColor="#777777"
-            android:textSize="12sp" />
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textColor="@color/pink_dark"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtCheckoutTotal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_form_rounded"
+            android:padding="12dp"
+            android:text="Tổng tiền"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:text="Phương thức thanh toán"
-            android:textColor="@android:color/black"
+            android:textColor="@color/pink_dark"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -166,37 +158,156 @@
             android:id="@+id/rgPaymentMethod"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp">
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_form_rounded"
+            android:orientation="vertical"
+            android:padding="12dp">
 
             <RadioButton
                 android:id="@+id/rbCash"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Tiền mặt" />
+                android:text="Tiền mặt khi nhận hàng" />
 
             <RadioButton
                 android:id="@+id/rbBanking"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chuyển khoản" />
+                android:layout_marginTop="6dp"
+                android:text="Chuyển khoản QR ngân hàng" />
 
             <RadioButton
                 android:id="@+id/rbMomo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Thanh toán MoMo QR" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/layoutBankingInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_form_rounded"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ví MoMo" />
-        </RadioGroup>
+                android:text="Thanh toán chuyển khoản ngân hàng"
+                android:textColor="@color/pink_dark"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/imgQrPayment"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/qr_payment" />
+
+            <TextView
+                android:id="@+id/txtBankInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Ngân hàng: TPBank"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/txtTransferNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Nội dung chuyển khoản"
+                android:textColor="@color/pink_dark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtBankingHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Vui lòng quét mã QR và chuyển đúng số tiền trước khi xác nhận đặt đơn."
+                android:textColor="@android:color/black"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutMomoInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_form_rounded"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Thanh toán MoMo QR"
+                android:textColor="@color/pink_dark"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/imgQrMomo"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/qr_momo" />
+
+            <TextView
+                android:id="@+id/txtMomoInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Ví điện tử: MoMo"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/txtMomoTransferNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Nội dung thanh toán"
+                android:textColor="@color/pink_dark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtMomoHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Vui lòng quét QR MoMo và thanh toán đúng số tiền của hóa đơn."
+                android:textColor="@android:color/black"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnConfirmOrder"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
             android:background="@drawable/bg_button_pink"
             android:backgroundTint="@null"
-            android:text="Xác nhận đặt hàng"
+            android:text="Xác nhận đặt đơn"
             android:textAllCaps="false"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
     </LinearLayout>
 </ScrollView>

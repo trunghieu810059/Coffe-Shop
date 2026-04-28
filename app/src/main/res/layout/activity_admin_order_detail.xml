@@ -11,15 +11,23 @@
         android:padding="16dp">
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CHI TIẾT ĐƠN HÀNG"
+            android:textColor="@color/pink_dark"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
             android:id="@+id/txtInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_form_rounded"
-            android:padding="16dp"
-            android:text="Thông tin đơn"
+            android:padding="12dp"
+            android:text="Thông tin đơn hàng"
             android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="14sp" />
 
         <LinearLayout
             android:id="@+id/itemsContainer"
@@ -28,64 +36,75 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_form_rounded"
             android:orientation="vertical"
-            android:padding="16dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Cập nhật trạng thái đơn hàng"
-            android:textColor="@color/pink_dark"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:padding="12dp" />
 
         <Button
-            android:id="@+id/btnPlaced"
+            android:id="@+id/btnConfirmPaid"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_button_pink"
             android:backgroundTint="@null"
-            android:text="Đã đặt"
+            android:text="Xác nhận đã thanh toán"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/btnPreparing"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_button_pink"
-            android:backgroundTint="@null"
-            android:text="Đang chuẩn bị"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btnDelivered"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_button_pink"
-            android:backgroundTint="@null"
-            android:text="Đã giao"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            <Button
+                android:id="@+id/btnPlaced"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_button_pink"
+                android:backgroundTint="@null"
+                android:text="Đã đặt"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnCancelled"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_button_pink"
-            android:backgroundTint="@null"
-            android:text="Đã huỷ"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            <Button
+                android:id="@+id/btnPreparing"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_button_pink"
+                android:backgroundTint="@null"
+                android:text="Đang chuẩn bị"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnDelivered"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_button_pink"
+                android:backgroundTint="@null"
+                android:text="Đã giao"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnCancelled"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_button_pink"
+                android:backgroundTint="@null"
+                android:text="Huỷ đơn hàng"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

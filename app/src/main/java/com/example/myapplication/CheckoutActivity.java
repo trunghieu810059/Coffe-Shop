@@ -2,18 +2,21 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.firebase.firestore.DocumentSnapshot;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -31,6 +34,12 @@ public class CheckoutActivity extends AppCompatActivity {
     private Button btnBackCheckout, btnConfirmOrder, btnApplyCoupon;
     private CheckBox chkSaveDefaultAddress;
     private RadioGroup rgPaymentMethod;
+
+    private LinearLayout layoutBankingInfo;
+    private TextView txtBankInfo, txtTransferNote, txtBankingHint;
+
+    private LinearLayout layoutMomoInfo;
+    private TextView txtMomoInfo, txtMomoTransferNote, txtMomoHint;
 
     private FirebaseFirestore db;
     private final DecimalFormat formatter = new DecimalFormat("#,###");
@@ -56,7 +65,19 @@ public class CheckoutActivity extends AppCompatActivity {
         setContentView(R.layout.activity_checkout);
 
         db = FirebaseFirestore.getInstance();
+        bindViews();
+        setupActions();
 
+        loadIntentData();
+        loadUserProfile();
+
+        selectedPaymentMethod = "cash";
+        layoutBankingInfo.setVisibility(View.GONE);
+        layoutMomoInfo.setVisibility(View.GONE);
+        rgPaymentMethod.check(R.id.rbCash);
+    }
+
+    private void bindViews() {
         txtCheckoutProduct = findViewById(R.id.txtCheckoutProduct);
         txtCheckoutOption = findViewById(R.id.txtCheckoutOption);
         txtCheckoutTotal = findViewById(R.id.txtCheckoutTotal);
@@ -75,24 +96,39 @@ public class CheckoutActivity extends AppCompatActivity {
         chkSaveDefaultAddress = findViewById(R.id.chkSaveDefaultAddress);
         rgPaymentMethod = findViewById(R.id.rgPaymentMethod);
 
+        layoutBankingInfo = findViewById(R.id.layoutBankingInfo);
+        txtBankInfo = findViewById(R.id.txtBankInfo);
+        txtTransferNote = findViewById(R.id.txtTransferNote);
+        txtBankingHint = findViewById(R.id.txtBankingHint);
+
+        layoutMomoInfo = findViewById(R.id.layoutMomoInfo);
+        txtMomoInfo = findViewById(R.id.txtMomoInfo);
+        txtMomoTransferNote = findViewById(R.id.txtMomoTransferNote);
+        txtMomoHint = findViewById(R.id.txtMomoHint);
+    }
+
+    private void setupActions() {
         btnBackCheckout.setOnClickListener(v -> finish());
+        btnApplyCoupon.setOnClickListener(v -> applyCoupon());
+        btnConfirmOrder.setOnClickListener(v -> confirmOrder());
 
         rgPaymentMethod.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.rbCash) {
                 selectedPaymentMethod = "cash";
+                layoutBankingInfo.setVisibility(View.GONE);
+                layoutMomoInfo.setVisibility(View.GONE);
             } else if (checkedId == R.id.rbBanking) {
                 selectedPaymentMethod = "banking";
+                layoutBankingInfo.setVisibility(View.VISIBLE);
+                layoutMomoInfo.setVisibility(View.GONE);
+                updateBankingInfo();
             } else if (checkedId == R.id.rbMomo) {
                 selectedPaymentMethod = "momo";
+                layoutBankingInfo.setVisibility(View.GONE);
+                layoutMomoInfo.setVisibility(View.VISIBLE);
+                updateMomoInfo();
             }
         });
-
-        btnApplyCoupon.setOnClickListener(v -> applyCoupon());
-
-        loadIntentData();
-        loadUserProfile();
-
-        btnConfirmOrder.setOnClickListener(v -> confirmOrder());
     }
 
     private void loadIntentData() {
@@ -111,60 +147,58 @@ public class CheckoutActivity extends AppCompatActivity {
 
             StringBuilder productText = new StringBuilder();
             StringBuilder optionText = new StringBuilder();
-
             totalAmount = 0;
 
             for (CartItem item : cartItems) {
                 productText.append("• ").append(item.name).append("\n");
-
                 optionText.append(item.name)
                         .append(" | Size: ").append(item.size)
                         .append(" | Topping: ").append(item.topping)
                         .append(" | SL: ").append(item.quantity)
                         .append("\n");
-
                 totalAmount += item.totalPrice;
             }
 
             txtCheckoutProduct.setText(productText.toString().trim());
             txtCheckoutOption.setText(optionText.toString().trim());
             updateTotalText();
-
-        } else {
-            productName = getIntent().getStringExtra("productName");
-            size = getIntent().getStringExtra("size");
-            topping = getIntent().getStringExtra("topping");
-            quantity = getIntent().getIntExtra("quantity", 1);
-            unitPrice = getIntent().getIntExtra("unitPrice", 0);
-
-            if (productName == null) productName = "Sản phẩm";
-            if (size == null) size = "M";
-            if (topping == null) topping = "Không";
-
-            totalAmount = unitPrice * quantity;
-
-            txtCheckoutProduct.setText(productName);
-            txtCheckoutOption.setText("Size: " + size + " | Topping: " + topping + " | Số lượng: " + quantity);
-            updateTotalText();
+            return;
         }
+
+        productName = getIntent().getStringExtra("productName");
+        size = getIntent().getStringExtra("size");
+        topping = getIntent().getStringExtra("topping");
+        quantity = getIntent().getIntExtra("quantity", 1);
+        unitPrice = getIntent().getIntExtra("unitPrice", 0);
+
+        if (productName == null) productName = "Sản phẩm";
+        if (size == null) size = "M";
+        if (topping == null) topping = "Không";
+
+        totalAmount = unitPrice * quantity;
+
+        txtCheckoutProduct.setText(productName);
+        txtCheckoutOption.setText("Size: " + size + " | Topping: " + topping + " | Số lượng: " + quantity);
+        updateTotalText();
     }
 
     private void loadUserProfile() {
         String username = UserSession.getUsername(this);
+        if (username == null || username.trim().isEmpty()) return;
 
         db.collection("Users")
                 .document(username)
                 .get()
                 .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
-                        String fullName = doc.getString("fullName");
-                        String phone = doc.getString("phone");
-                        String address = doc.getString("address");
+                    if (!doc.exists()) return;
 
-                        if (fullName != null) edtReceiverName.setText(fullName);
-                        if (phone != null) edtReceiverPhone.setText(phone);
-                        if (address != null) edtReceiverAddress.setText(address);
-                    }
+                    String fullName = doc.getString("fullName");
+                    String phone = doc.getString("phone");
+                    String address = doc.getString("address");
+
+                    if (fullName != null) edtReceiverName.setText(fullName);
+                    if (phone != null) edtReceiverPhone.setText(phone);
+                    if (address != null) edtReceiverAddress.setText(address);
                 });
     }
 
@@ -180,17 +214,14 @@ public class CheckoutActivity extends AppCompatActivity {
                 .document(code)
                 .get()
                 .addOnSuccessListener(this::handleVoucherResult)
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Lỗi kiểm tra voucher: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi kiểm tra voucher: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
     }
+
     private void handleVoucherResult(DocumentSnapshot doc) {
         if (!doc.exists()) {
-            discountAmount = 0;
-            appliedCoupon = "";
-            txtDiscountInfo.setText("Mã giảm giá không tồn tại");
-            updateTotalText();
-            Toast.makeText(this, "Mã giảm giá không hợp lệ", Toast.LENGTH_SHORT).show();
+            resetCouponState("Mã giảm giá không tồn tại", "Mã giảm giá không hợp lệ");
             return;
         }
 
@@ -201,25 +232,16 @@ public class CheckoutActivity extends AppCompatActivity {
         String description = doc.getString("description");
 
         if (isActive == null || !isActive) {
-            discountAmount = 0;
-            appliedCoupon = "";
-            txtDiscountInfo.setText("Mã giảm giá hiện không khả dụng");
-            updateTotalText();
-            Toast.makeText(this, "Voucher đã bị tắt", Toast.LENGTH_SHORT).show();
+            resetCouponState("Mã giảm giá hiện không khả dụng", "Voucher đã bị tắt");
             return;
         }
 
         if (code == null || type == null || valueDouble == null) {
-            discountAmount = 0;
-            appliedCoupon = "";
-            txtDiscountInfo.setText("Dữ liệu voucher không hợp lệ");
-            updateTotalText();
-            Toast.makeText(this, "Voucher lỗi dữ liệu", Toast.LENGTH_SHORT).show();
+            resetCouponState("Dữ liệu voucher không hợp lệ", "Voucher lỗi dữ liệu");
             return;
         }
 
         int value = valueDouble.intValue();
-        discountAmount = 0;
         appliedCoupon = code;
 
         if ("percent".equalsIgnoreCase(type)) {
@@ -227,11 +249,7 @@ public class CheckoutActivity extends AppCompatActivity {
         } else if ("fixed".equalsIgnoreCase(type)) {
             discountAmount = Math.min(value, totalAmount);
         } else {
-            discountAmount = 0;
-            appliedCoupon = "";
-            txtDiscountInfo.setText("Loại voucher không hợp lệ");
-            updateTotalText();
-            Toast.makeText(this, "Voucher lỗi kiểu giảm giá", Toast.LENGTH_SHORT).show();
+            resetCouponState("Loại voucher không hợp lệ", "Voucher lỗi kiểu giảm giá");
             return;
         }
 
@@ -246,14 +264,69 @@ public class CheckoutActivity extends AppCompatActivity {
         Toast.makeText(this, "Áp dụng mã thành công", Toast.LENGTH_SHORT).show();
     }
 
+    private void resetCouponState(String textInfo, String toastText) {
+        discountAmount = 0;
+        appliedCoupon = "";
+        txtDiscountInfo.setText(textInfo);
+        updateTotalText();
+        Toast.makeText(this, toastText, Toast.LENGTH_SHORT).show();
+    }
+
     private void updateTotalText() {
-        int finalTotal = Math.max(0, totalAmount - discountAmount);
+        int finalTotal = getFinalTotal();
 
         txtCheckoutTotal.setText(
                 "Tạm tính: " + formatter.format(totalAmount) + "đ\n" +
                         "Giảm giá: -" + formatter.format(discountAmount) + "đ\n" +
                         "Thanh toán: " + formatter.format(finalTotal) + "đ"
         );
+
+        if ("banking".equals(selectedPaymentMethod) && layoutBankingInfo.getVisibility() == View.VISIBLE) {
+            updateBankingInfo();
+        }
+
+        if ("momo".equals(selectedPaymentMethod) && layoutMomoInfo.getVisibility() == View.VISIBLE) {
+            updateMomoInfo();
+        }
+    }
+
+    private int getFinalTotal() {
+        return Math.max(0, totalAmount - discountAmount);
+    }
+
+    private void updateBankingInfo() {
+        int finalTotal = getFinalTotal();
+        String username = UserSession.getUsername(this);
+        if (username == null || username.trim().isEmpty()) username = "USER";
+
+        String transferContent = "PAY_" + username.toUpperCase();
+
+        txtBankInfo.setText(
+                "Ngân hàng: TPBank\n" +
+                        "Chủ tài khoản: NGUYEN TRUNG HIEU\n" +
+                        "Số tài khoản: 02078693801\n" +
+                        "Số tiền: " + formatter.format(finalTotal) + "đ"
+        );
+
+        txtTransferNote.setText("Nội dung chuyển khoản: " + transferContent);
+        txtBankingHint.setText("Vui lòng quét mã QR và chuyển đúng số tiền trước khi xác nhận đặt đơn.");
+    }
+
+    private void updateMomoInfo() {
+        int finalTotal = getFinalTotal();
+        String username = UserSession.getUsername(this);
+        if (username == null || username.trim().isEmpty()) username = "USER";
+
+        String momoContent = "MOMO_" + username.toUpperCase();
+
+        txtMomoInfo.setText(
+                "Ví điện tử: MoMo\n" +
+                        "Tên hiển thị: NGUYEN TRUNG HIEU\n" +
+                        "Số tiền cần thanh toán: " + formatter.format(finalTotal) + "đ"
+        );
+
+        txtMomoTransferNote.setText("Nội dung thanh toán: " + momoContent);
+        txtMomoHint.setText("Vui lòng quét QR MoMo và thanh toán đúng số tiền của hóa đơn.");
     }
 
     private void confirmOrder() {
@@ -262,6 +335,11 @@ public class CheckoutActivity extends AppCompatActivity {
         String phone = edtReceiverPhone.getText().toString().trim();
         String address = edtReceiverAddress.getText().toString().trim();
         String orderNote = edtOrderNote.getText().toString().trim();
+
+        if (username == null || username.trim().isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy người dùng đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (fullName.isEmpty() || phone.isEmpty() || address.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập đầy đủ tên, số điện thoại và địa chỉ", Toast.LENGTH_SHORT).show();
@@ -290,9 +368,20 @@ public class CheckoutActivity extends AppCompatActivity {
                 .set(userData, SetOptions.merge());
     }
 
-    private void confirmSingleOrder(String username, String fullName, String phone, String address, String orderNote) {
-        int finalTotal = Math.max(0, totalAmount - discountAmount);
+    private String getPaymentStatusForMethod() {
+        if ("banking".equals(selectedPaymentMethod) || "momo".equals(selectedPaymentMethod)) {
+            return "PENDING";
+        }
+        return "UNPAID";
+    }
 
+    private Map<String, Object> buildBaseOrder(
+            String username,
+            String fullName,
+            String phone,
+            String address,
+            String orderNote
+    ) {
         Map<String, Object> order = new HashMap<>();
         order.put("username", username);
         order.put("customerName", fullName);
@@ -300,10 +389,18 @@ public class CheckoutActivity extends AppCompatActivity {
         order.put("address", address);
         order.put("orderNote", orderNote);
         order.put("paymentMethod", selectedPaymentMethod);
+        order.put("paymentStatus", getPaymentStatusForMethod());
         order.put("couponCode", appliedCoupon);
         order.put("discountAmount", discountAmount);
+        order.put("totalAmount", totalAmount);
+        order.put("finalAmount", getFinalTotal());
+        order.put("status", "PLACED");
+        return order;
+    }
 
-// ✅ items: để lịch sử không bị gom + dễ mở rộng
+    private void confirmSingleOrder(String username, String fullName, String phone, String address, String orderNote) {
+        Map<String, Object> order = buildBaseOrder(username, fullName, phone, address, orderNote);
+
         ArrayList<Map<String, Object>> items = new ArrayList<>();
         Map<String, Object> item = new HashMap<>();
         item.put("name", productName);
@@ -315,32 +412,20 @@ public class CheckoutActivity extends AppCompatActivity {
         items.add(item);
 
         order.put("items", items);
+        order.put("createdAt", FieldValue.serverTimestamp());
 
-// ✅ tổng tiền
-        order.put("totalAmount", totalAmount);
-        order.put("finalAmount", finalTotal);
-
-// ✅ trạng thái chuẩn để admin quản lý
-        order.put("status", "PLACED"); // đã đặt
-
-// ✅ thời gian chuẩn (để orderBy)
-        order.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("Orders")
                 .add(order)
-                .addOnSuccessListener(ref -> {
-                    // ✅ gọi popup cảm ơn + mời đánh giá
-                    showReviewDialog();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Tạo đơn thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+                .addOnSuccessListener(ref -> showReviewDialog())
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Tạo đơn thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
     }
 
     private void confirmOrderFromCart(String username, String fullName, String phone, String address, String orderNote) {
-        ArrayList<Map<String, Object>> itemMaps = new ArrayList<>();
+        Map<String, Object> order = buildBaseOrder(username, fullName, phone, address, orderNote);
 
+        ArrayList<Map<String, Object>> itemMaps = new ArrayList<>();
         for (CartItem item : cartItems) {
             Map<String, Object> map = new HashMap<>();
             map.put("name", item.name);
@@ -352,22 +437,8 @@ public class CheckoutActivity extends AppCompatActivity {
             itemMaps.add(map);
         }
 
-        int finalTotal = Math.max(0, totalAmount - discountAmount);
-
-        Map<String, Object> order = new HashMap<>();
-        order.put("username", username);
-        order.put("customerName", fullName);
-        order.put("phone", phone);
-        order.put("address", address);
-        order.put("orderNote", orderNote);
-        order.put("paymentMethod", selectedPaymentMethod);
-        order.put("couponCode", appliedCoupon);
-        order.put("discountAmount", discountAmount);
         order.put("items", itemMaps);
-        order.put("totalAmount", totalAmount);
-        order.put("finalAmount", finalTotal);
-        order.put("status", "PLACED");
-        order.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        order.put("createdAt", Timestamp.now());
 
         db.collection("Orders")
                 .add(order)
@@ -379,7 +450,7 @@ public class CheckoutActivity extends AppCompatActivity {
                     }
 
                     CartManager.clearCart(this);
-                    Toast.makeText(this, "Thanh toán thành công", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Đặt đơn thành công", Toast.LENGTH_SHORT).show();
                     showReviewDialog();
                 })
                 .addOnFailureListener(e ->

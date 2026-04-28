@@ -93,5 +93,17 @@
             android:textColor="@android:color/white"
             android:textSize="12sp"
             android:textStyle="bold" />
+        <Button
+            android:id="@+id/btnReplyReview"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button_pink"
+            android:backgroundTint="@null"
+            android:text="Phản hồi"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

@@ -32,7 +32,7 @@ public class AdminActivity extends AppCompatActivity {
             username = "Admin";
         }
 
-        tvAdminWelcome.setText("Xin chào Admin, " + username);
+        tvAdminWelcome.setText("Xin chào, " + username);
 
         btnManageProducts.setOnClickListener(v -> {
             Intent intent = new Intent(AdminActivity.this, AdminProductActivity.class);

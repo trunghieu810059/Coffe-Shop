@@ -49,6 +49,7 @@ public class ReviewStoreActivity extends AppCompatActivity {
         if (username == null || username.trim().isEmpty()) {
             username = "User";
         }
+
         if (customerName == null || customerName.trim().isEmpty()) {
             customerName = username;
         }
@@ -69,50 +70,52 @@ public class ReviewStoreActivity extends AppCompatActivity {
                 txtRatingValue.setText("Đánh giá của bạn: " + rating + " sao")
         );
 
-        btnSubmitReview.setOnClickListener(v -> {
-            float rating = ratingBar.getRating();
-            String comment = edtReviewContent.getText().toString().trim();
+        btnSubmitReview.setOnClickListener(v -> submitReview(finalUsername, finalCustomerName, finalOrderId));
+    }
 
-            if (rating == 0) {
-                Toast.makeText(this, "Vui lòng chọn số sao đánh giá", Toast.LENGTH_SHORT).show();
-                return;
-            }
+    private void submitReview(String username, String customerName, String orderId) {
+        float rating = ratingBar.getRating();
+        String comment = edtReviewContent.getText().toString().trim();
 
-            if (comment.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập nhận xét", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        if (rating == 0) {
+            Toast.makeText(this, "Vui lòng chọn số sao đánh giá", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            btnSubmitReview.setEnabled(false);
-            btnSubmitReview.setText("Đang gửi...");
+        if (comment.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập nhận xét", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            Map<String, Object> review = new HashMap<>();
-            review.put("username", finalUsername);
-            review.put("customerName", finalCustomerName);
-            review.put("orderId", finalOrderId);
-            review.put("rating", rating);
-            review.put("comment", comment);
-            review.put("createdAt", Timestamp.now());
-            review.put("isHidden", false);
-            review.put("adminNote", "");
-            review.put("adminReply", "");
+        btnSubmitReview.setEnabled(false);
+        btnSubmitReview.setText("Đang gửi...");
 
-            db.collection("Reviews")
-                    .add(review)
-                    .addOnSuccessListener(documentReference -> {
-                        Toast.makeText(this, "Gửi đánh giá thành công", Toast.LENGTH_SHORT).show();
-                        btnSubmitReview.setEnabled(true);
-                        btnSubmitReview.setText("Gửi đánh giá");
+        Map<String, Object> review = new HashMap<>();
+        review.put("username", username);
+        review.put("customerName", customerName);
+        review.put("orderId", orderId);
+        review.put("rating", rating);
+        review.put("comment", comment);
+        review.put("createdAt", Timestamp.now());
+        review.put("isHidden", false);
+        review.put("adminNote", "");
+        review.put("adminReply", "");
 
-                        Intent intent = new Intent(ReviewStoreActivity.this, ProductListActivity.class);
-                        startActivity(intent);
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Lỗi gửi đánh giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        btnSubmitReview.setEnabled(true);
-                        btnSubmitReview.setText("Gửi đánh giá");
-                    });
-        });
+        db.collection("Reviews")
+                .add(review)
+                .addOnSuccessListener(documentReference -> {
+                    Toast.makeText(this, "Gửi đánh giá thành công", Toast.LENGTH_SHORT).show();
+                    btnSubmitReview.setEnabled(true);
+                    btnSubmitReview.setText("Gửi đánh giá");
+
+                    Intent intent = new Intent(ReviewStoreActivity.this, ProductListActivity.class);
+                    startActivity(intent);
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Lỗi gửi đánh giá: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    btnSubmitReview.setEnabled(true);
+                    btnSubmitReview.setText("Gửi đánh giá");
+                });
     }
 }
