@@ -42,6 +42,12 @@ public class WelcomeActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
+        bindViews();
+        setupActions();
+        loadBestSellerProducts();
+    }
+
+    private void bindViews() {
         tvWelcome = findViewById(R.id.tvWelcome);
 
         btnMenu = findViewById(R.id.btnMenu);
@@ -69,7 +75,9 @@ public class WelcomeActivity extends AppCompatActivity {
         txtBestSellerName3 = findViewById(R.id.txtBestSellerName3);
         txtBestSellerPrice3 = findViewById(R.id.txtBestSellerPrice3);
         txtBestSellerSold3 = findViewById(R.id.txtBestSellerSold3);
+    }
 
+    private void setupActions() {
         String username = getIntent().getStringExtra("username");
         if (username == null || username.trim().isEmpty()) {
             username = "User";
@@ -78,9 +86,9 @@ public class WelcomeActivity extends AppCompatActivity {
         final String finalUsername = username;
         tvWelcome.setText("Xin chào, " + finalUsername);
 
-        tvWelcome.setOnClickListener(v -> {
-            startActivity(new Intent(WelcomeActivity.this, ProfileActivity.class));
-        });
+        tvWelcome.setOnClickListener(v ->
+                startActivity(new Intent(WelcomeActivity.this, ProfileActivity.class))
+        );
 
         btnMenu.setOnClickListener(v -> {
             Intent intent = new Intent(WelcomeActivity.this, ProductListActivity.class);
@@ -110,8 +118,6 @@ public class WelcomeActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
-
-        loadBestSellerProducts();
     }
 
     private void loadBestSellerProducts() {
@@ -123,49 +129,66 @@ public class WelcomeActivity extends AppCompatActivity {
                     bestSellerList.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String docId = doc.getId();
-
-                        String name = doc.getString("Name");
-                        if (name == null) name = docId;
-
-                        String description = doc.getString("description");
-                        if (description == null) description = "";
-
-                        String category = doc.getString("category");
-                        if (category == null) category = "Việt Nam";
-
-                        Long priceLong = doc.getLong("price");
-                        int price = priceLong != null ? priceLong.intValue() : 0;
-
-                        Long soldLong = doc.getLong("sold");
-                        int sold = soldLong != null ? soldLong.intValue() : 0;
-
-                        String imageName = doc.getString("imageName");
-                        int imgRes = 0;
-                        if (imageName != null) {
-                            imgRes = getResources().getIdentifier(imageName, "drawable", getPackageName());
-                        }
-                        if (imgRes == 0) imgRes = R.mipmap.ic_launcher;
-
-                        Double ratingDouble = doc.getDouble("rating");
-                        float rating = ratingDouble != null ? ratingDouble.floatValue() : 4.8f;
-
-                        Product product = new Product(
-                                docId,
-                                name,
-                                description,
-                                category,
-                                price,
-                                imgRes,
-                                rating,
-                                sold
-                        );
-
+                        Product product = mapDocumentToProduct(doc);
                         bestSellerList.add(product);
                     }
 
                     bindBestSeller(bestSellerList);
-                });
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi tải best seller: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+    }
+
+    private Product mapDocumentToProduct(QueryDocumentSnapshot doc) {
+        String docId = doc.getId();
+
+        String name = doc.getString("Name");
+        if (name == null || name.trim().isEmpty()) {
+            name = docId;
+        }
+
+        String description = doc.getString("description");
+        if (description == null) description = "";
+
+        String category = doc.getString("category");
+        if (category == null || category.trim().isEmpty()) {
+            category = "Nước giải khát";
+        }
+
+        Long priceLong = doc.getLong("price");
+        int price = priceLong != null ? priceLong.intValue() : 0;
+
+        Long soldLong = doc.getLong("sold");
+        int sold = soldLong != null ? soldLong.intValue() : 0;
+
+        String imageName = doc.getString("imageName");
+        if (imageName == null) imageName = "";
+
+        int imgRes = 0;
+        if (!imageName.isEmpty()) {
+            imgRes = getResources().getIdentifier(imageName, "drawable", getPackageName());
+        }
+        if (imgRes == 0) imgRes = R.mipmap.ic_launcher;
+
+        String imageUrl = doc.getString("imageUrl");
+        if (imageUrl == null) imageUrl = "";
+
+        Double ratingDouble = doc.getDouble("rating");
+        float rating = ratingDouble != null ? ratingDouble.floatValue() : 4.8f;
+
+        return new Product(
+                docId,
+                name,
+                description,
+                category,
+                price,
+                imgRes,
+                imageName,
+                imageUrl,
+                rating,
+                sold
+        );
     }
 
     private void bindBestSeller(ArrayList<Product> list) {

@@ -65,7 +65,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
 
         holder.img.setImageResource(p.imageResId);
         holder.txtName.setText(p.name);
-        holder.txtOrigin.setText("Nguồn gốc: " + p.category);
+        holder.txtOrigin.setText("Nhóm: " + p.category);
         holder.txtSub.setText(p.description);
         holder.txtPrice.setText(formatter.format(p.price) + "đ");
 

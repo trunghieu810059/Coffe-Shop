@@ -288,6 +288,7 @@ public class OrderDetailActivity extends AppCompatActivity {
                                     "cancelledAt", FieldValue.serverTimestamp()
                             )
                             .addOnSuccessListener(unused -> {
+                                AdminNoticeHelper.increaseOrderNotice();
                                 Toast.makeText(this, "Đã hủy đơn hàng", Toast.LENGTH_SHORT).show();
                                 loadOrderDetail();
                             })

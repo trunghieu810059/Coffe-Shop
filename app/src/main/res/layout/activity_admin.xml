@@ -1,88 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/pink_bg">
 
-    <!-- Ảnh nền -->
-    <ImageView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/admin_bg" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="TRANG QUẢN TRỊ"
+            android:textColor="@color/pink_dark"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/tvAdminWelcome"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_button_pink"
+            android:backgroundTint="@null"
+            android:gravity="center"
+            android:padding="14dp"
+            android:text="Xin chào, Admin"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
-    <!-- Nội dung chính -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Chọn chức năng quản lý"
+            android:textColor="@color/pink_dark"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="TRANG QUẢN TRỊ"
-                android:textColor="@color/pink_dark"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvAdminWelcome"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_button_pink"
+            <Button
+                android:id="@+id/btnManageProducts"
+                android:layout_width="0dp"
+                android:layout_height="130dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_form_rounded"
                 android:backgroundTint="@null"
                 android:gravity="center"
-                android:padding="14dp"
-                android:text="Xin chào, Admin"
-                android:textColor="@android:color/white"
-                android:textSize="17sp"
+                android:padding="12dp"
+                android:text="Quản lý&#10;sản phẩm"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="Chọn chức năng quản lý"
-                android:textColor="@color/pink_dark"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnManageProducts"
-                    android:layout_width="0dp"
-                    android:layout_height="130dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_form_rounded"
-                    android:backgroundTint="@null"
-                    android:gravity="center"
-                    android:padding="12dp"
-                    android:text="Quản lý&#10;sản phẩm"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="130dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp">
 
                 <Button
                     android:id="@+id/btnManageOrders"
-                    android:layout_width="0dp"
-                    android:layout_height="130dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:background="@drawable/bg_form_rounded"
                     android:backgroundTint="@null"
                     android:gravity="center"
@@ -92,36 +83,58 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-            </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnRevenue"
-                    android:layout_width="0dp"
-                    android:layout_height="130dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_form_rounded"
-                    android:backgroundTint="@null"
+                <TextView
+                    android:id="@+id/tvOrderBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
+                    android:minWidth="24dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/bg_badge_red"
                     android:gravity="center"
-                    android:padding="12dp"
-                    android:text="Thống Kê&#10;Doanh Thu"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:text="1"
+                    android:textColor="@android:color/white"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnRevenue"
+                android:layout_width="0dp"
+                android:layout_height="130dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_form_rounded"
+                android:backgroundTint="@null"
+                android:gravity="center"
+                android:padding="12dp"
+                android:text="Dashboard&#10;doanh thu"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="130dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp">
 
                 <Button
                     android:id="@+id/btnReviews"
-                    android:layout_width="0dp"
-                    android:layout_height="130dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:background="@drawable/bg_form_rounded"
                     android:backgroundTint="@null"
                     android:gravity="center"
@@ -131,38 +144,54 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-            </LinearLayout>
 
-            <Button
-                android:id="@+id/btnStoreInfo"
-                android:layout_width="match_parent"
-                android:layout_height="110dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_form_rounded"
-                android:backgroundTint="@null"
-                android:gravity="center"
-                android:padding="12dp"
-                android:text="Thông tin cửa hàng"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnLogoutAdmin"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="24dp"
-                android:background="@drawable/bg_button_pink"
-                android:backgroundTint="@null"
-                android:text="Đăng xuất"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
+                <TextView
+                    android:id="@+id/tvReviewBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
+                    android:minWidth="24dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/bg_badge_red"
+                    android:gravity="center"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:text="1"
+                    android:textColor="@android:color/white"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
-    </ScrollView>
 
-</FrameLayout>
+        <Button
+            android:id="@+id/btnStoreInfo"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_form_rounded"
+            android:backgroundTint="@null"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="Thông tin cửa hàng"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnLogoutAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/bg_button_pink"
+            android:backgroundTint="@null"
+            android:text="Đăng xuất"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>

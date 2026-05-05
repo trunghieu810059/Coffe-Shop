@@ -416,7 +416,10 @@ public class CheckoutActivity extends AppCompatActivity {
 
         db.collection("Orders")
                 .add(order)
-                .addOnSuccessListener(ref -> showReviewDialog())
+                .addOnSuccessListener(ref -> {
+                    AdminNoticeHelper.increaseOrderNotice();
+                    showReviewDialog();
+                })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Tạo đơn thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
@@ -450,6 +453,7 @@ public class CheckoutActivity extends AppCompatActivity {
                     }
 
                     CartManager.clearCart(this);
+                    AdminNoticeHelper.increaseOrderNotice();
                     Toast.makeText(this, "Đặt đơn thành công", Toast.LENGTH_SHORT).show();
                     showReviewDialog();
                 })

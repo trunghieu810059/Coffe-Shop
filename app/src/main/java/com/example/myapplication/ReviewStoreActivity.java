@@ -104,6 +104,7 @@ public class ReviewStoreActivity extends AppCompatActivity {
         db.collection("Reviews")
                 .add(review)
                 .addOnSuccessListener(documentReference -> {
+                    AdminNoticeHelper.increaseReviewNotice();
                     Toast.makeText(this, "Gửi đánh giá thành công", Toast.LENGTH_SHORT).show();
                     btnSubmitReview.setEnabled(true);
                     btnSubmitReview.setText("Gửi đánh giá");

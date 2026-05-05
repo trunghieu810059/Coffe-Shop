@@ -28,9 +28,10 @@ import java.util.Map;
 
 public class ProductListActivity extends AppCompatActivity {
 
-    private ArrayList<Product> allProducts;
-    private ArrayList<Product> filteredProducts;
-    private ArrayList<Product> products;
+    private final ArrayList<Product> allProducts = new ArrayList<>();
+    private final ArrayList<Product> filteredProducts = new ArrayList<>();
+    private final ArrayList<Product> products = new ArrayList<>();
+
     private ProductAdapter adapter;
     private FirebaseFirestore db;
 
@@ -40,8 +41,12 @@ public class ProductListActivity extends AppCompatActivity {
     private TextView tvPageInfo, tvProductCount;
     private EditText edtSearch;
 
+    private Button btnCatAll, btnCatCoffee, btnCatMilkTea, btnCatFruitTea, btnCatMatcha, btnCatDrink;
+
     private int currentPage = 1;
     private final int pageSize = 4;
+
+    private String selectedCategory = "Tất cả";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +54,20 @@ public class ProductListActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.listview);
 
+        setupInsets();
+        db = FirebaseFirestore.getInstance();
+
+        bindViews();
+        setupListView();
+        setupButtons();
+
+        addProductIfMissing("MatchaLatte", "Matcha Latte", 32000, "matchalatte", "Matcha / Latte");
+        addProductIfMissing("NuocSuoi", "Nước Suối", 10000, "nuocsuoi", "Nước giải khát");
+
+        loadAllFromFirestore();
+    }
+
+    private void setupInsets() {
         if (findViewById(R.id.main) != null) {
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -56,9 +75,9 @@ public class ProductListActivity extends AppCompatActivity {
                 return insets;
             });
         }
+    }
 
-        db = FirebaseFirestore.getInstance();
-
+    private void bindViews() {
         listView = findViewById(R.id.listView);
         btnPrevPage = findViewById(R.id.btnPrevPage);
         btnNextPage = findViewById(R.id.btnNextPage);
@@ -70,13 +89,27 @@ public class ProductListActivity extends AppCompatActivity {
         btnOpenCart = findViewById(R.id.btnOpenCart);
         btnOpenFavorite = findViewById(R.id.btnOpenFavorite);
 
-        allProducts = new ArrayList<>();
-        filteredProducts = new ArrayList<>();
-        products = new ArrayList<>();
+        btnCatAll = findViewById(R.id.btnCatAll);
+        btnCatCoffee = findViewById(R.id.btnCatCoffee);
+        btnCatMilkTea = findViewById(R.id.btnCatMilkTea);
+        btnCatFruitTea = findViewById(R.id.btnCatFruitTea);
+        btnCatMatcha = findViewById(R.id.btnCatMatcha);
+        btnCatDrink = findViewById(R.id.btnCatDrink);
+    }
 
+    private void setupListView() {
         adapter = new ProductAdapter(this, products);
         listView.setAdapter(adapter);
 
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Product p = (Product) parent.getItemAtPosition(position);
+            Intent intent = new Intent(ProductListActivity.this, ProductDetailActivity.class);
+            intent.putExtra("productId", p.docId);
+            startActivity(intent);
+        });
+    }
+
+    private void setupButtons() {
         btnBackWelcome.setOnClickListener(v -> finish());
 
         btnOpenCart.setOnClickListener(v -> {
@@ -111,7 +144,7 @@ public class ProductListActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterProducts(s.toString().trim());
+                applyFilters();
             }
 
             @Override
@@ -119,39 +152,73 @@ public class ProductListActivity extends AppCompatActivity {
             }
         });
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            Product p = (Product) parent.getItemAtPosition(position);
+        btnCatAll.setOnClickListener(v -> selectCategory("Tất cả"));
+        btnCatCoffee.setOnClickListener(v -> selectCategory("Cà phê"));
+        btnCatMilkTea.setOnClickListener(v -> selectCategory("Trà sữa"));
+        btnCatFruitTea.setOnClickListener(v -> selectCategory("Trà trái cây"));
+        btnCatMatcha.setOnClickListener(v -> selectCategory("Matcha / Latte"));
+        btnCatDrink.setOnClickListener(v -> selectCategory("Nước giải khát"));
 
-            Intent intent = new Intent(ProductListActivity.this, ProductDetailActivity.class);
-            intent.putExtra("productId", p.docId);
-            startActivity(intent);
-        });
-
-        addProductIfMissing("MatchaLatte", "Matcha Latte", 32000, "matchalatte");
-        addProductIfMissing("NuocSuoi", "Nước Suối", 10000, "nuocsuoi");
-
-        loadAllFromFirestore();
+        updateCategoryUI();
     }
 
-    private Map<String, Object> createProductMap(String name, int price, String imageName) {
+    private void selectCategory(String category) {
+        selectedCategory = category;
+        currentPage = 1;
+        updateCategoryUI();
+        applyFilters();
+    }
+
+    private void updateCategoryUI() {
+        resetCategoryStyle(btnCatAll);
+        resetCategoryStyle(btnCatCoffee);
+        resetCategoryStyle(btnCatMilkTea);
+        resetCategoryStyle(btnCatFruitTea);
+        resetCategoryStyle(btnCatMatcha);
+        resetCategoryStyle(btnCatDrink);
+
+        if ("Tất cả".equals(selectedCategory)) setSelectedCategoryStyle(btnCatAll);
+        if ("Cà phê".equals(selectedCategory)) setSelectedCategoryStyle(btnCatCoffee);
+        if ("Trà sữa".equals(selectedCategory)) setSelectedCategoryStyle(btnCatMilkTea);
+        if ("Trà trái cây".equals(selectedCategory)) setSelectedCategoryStyle(btnCatFruitTea);
+        if ("Matcha / Latte".equals(selectedCategory)) setSelectedCategoryStyle(btnCatMatcha);
+        if ("Nước giải khát".equals(selectedCategory)) setSelectedCategoryStyle(btnCatDrink);
+    }
+
+    private void resetCategoryStyle(Button button) {
+        button.setBackgroundResource(R.drawable.bg_chip_outline);
+        button.setTextColor(getResources().getColor(R.color.pink_dark));
+    }
+
+    private void setSelectedCategoryStyle(Button button) {
+        button.setBackgroundResource(R.drawable.bg_button_pink);
+        button.setTextColor(getResources().getColor(android.R.color.white));
+    }
+
+    private Map<String, Object> createProductMap(String name, int price, String imageName, String category) {
         Map<String, Object> product = new HashMap<>();
         product.put("Name", name);
         product.put("price", price);
         product.put("imageName", imageName);
         product.put("description", "Thức uống thơm ngon, chuẩn vị quán");
-        product.put("category", "Việt Nam");
+        product.put("category", category);
         product.put("rating", 4.8);
         product.put("sold", 120);
+        product.put("imageUrl", "");
         return product;
     }
 
-    private void addProductIfMissing(String docId, String name, int price, String imageName) {
-        db.collection("Store").document(docId).get()
+    private void addProductIfMissing(String docId, String name, int price, String imageName, String category) {
+        db.collection("Store")
+                .document(docId)
+                .get()
                 .addOnSuccessListener(snapshot -> {
                     if (!snapshot.exists()) {
-                        Map<String, Object> product = createProductMap(name, price, imageName);
+                        Map<String, Object> product = createProductMap(name, price, imageName, category);
 
-                        db.collection("Store").document(docId).set(product)
+                        db.collection("Store")
+                                .document(docId)
+                                .set(product)
                                 .addOnSuccessListener(aVoid -> loadAllFromFirestore())
                                 .addOnFailureListener(e ->
                                         Toast.makeText(this, "Lỗi thêm " + name + ": " + e.getMessage(), Toast.LENGTH_LONG).show()
@@ -171,77 +238,123 @@ public class ProductListActivity extends AppCompatActivity {
                     allProducts.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String docId = doc.getId();
-
-                        String name = doc.getString("Name");
-                        if (name == null) name = docId;
-
-                        Long priceLong = doc.getLong("price");
-                        int price = (priceLong != null) ? priceLong.intValue() : 0;
-
-                        String imageName = doc.getString("imageName");
-                        int imgRes = 0;
-                        if (imageName != null) {
-                            imgRes = getResources().getIdentifier(imageName, "drawable", getPackageName());
-                        }
-                        if (imgRes == 0) imgRes = R.mipmap.ic_launcher;
-
-                        String description = doc.getString("description");
-                        if (description == null) {
-                            description = "Thức uống thơm ngon, chuẩn vị quán";
-                        }
-
-                        String category = doc.getString("category");
-                        if (category == null) {
-                            category = "Việt Nam";
-                        }
-
-                        Double ratingDouble = doc.getDouble("rating");
-                        float rating = (ratingDouble != null) ? ratingDouble.floatValue() : 4.8f;
-
-                        Long soldLong = doc.getLong("sold");
-                        int sold = (soldLong != null) ? soldLong.intValue() : 120;
-
-                        Product product = new Product(
-                                docId,
-                                name,
-                                description,
-                                category,
-                                price,
-                                imgRes,
-                                rating,
-                                sold
-                        );
-
-                        product.isFavorite = FavoriteManager.isFavorite(this, name);
+                        Product product = mapDocumentToProduct(doc);
+                        product.isFavorite = FavoriteManager.isFavorite(this, product.name);
                         allProducts.add(product);
                     }
 
-                    filterProducts(edtSearch.getText().toString().trim());
+                    applyFilters();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Lỗi Firestore: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
     }
 
-    private void filterProducts(String keyword) {
+    private Product mapDocumentToProduct(QueryDocumentSnapshot doc) {
+        String docId = doc.getId();
+
+        String name = doc.getString("Name");
+        if (name == null || name.trim().isEmpty()) {
+            name = docId;
+        }
+
+        Long priceLong = doc.getLong("price");
+        int price = priceLong != null ? priceLong.intValue() : 0;
+
+        String imageName = doc.getString("imageName");
+        if (imageName == null) imageName = "";
+
+        int imgRes = 0;
+        if (!imageName.isEmpty()) {
+            imgRes = getResources().getIdentifier(imageName, "drawable", getPackageName());
+        }
+        if (imgRes == 0) {
+            imgRes = R.mipmap.ic_launcher;
+        }
+
+        String imageUrl = doc.getString("imageUrl");
+        if (imageUrl == null) imageUrl = "";
+
+        String description = doc.getString("description");
+        if (description == null || description.trim().isEmpty()) {
+            description = "Thức uống thơm ngon, chuẩn vị quán";
+        }
+
+        String firestoreCategory = doc.getString("category");
+        String normalizedCategory = normalizeCategory(name, firestoreCategory);
+
+        Double ratingDouble = doc.getDouble("rating");
+        float rating = ratingDouble != null ? ratingDouble.floatValue() : 4.8f;
+
+        Long soldLong = doc.getLong("sold");
+        int sold = soldLong != null ? soldLong.intValue() : 120;
+
+        return new Product(
+                docId,
+                name,
+                description,
+                normalizedCategory,
+                price,
+                imgRes,
+                imageName,
+                imageUrl,
+                rating,
+                sold
+        );
+    }
+
+    private String normalizeCategory(String name, String firestoreCategory) {
+        if (firestoreCategory != null) {
+            String c = firestoreCategory.trim();
+
+            if (c.equalsIgnoreCase("Cà phê")) return "Cà phê";
+            if (c.equalsIgnoreCase("Trà sữa")) return "Trà sữa";
+            if (c.equalsIgnoreCase("Trà trái cây")) return "Trà trái cây";
+            if (c.equalsIgnoreCase("Matcha / Latte")) return "Matcha / Latte";
+            if (c.equalsIgnoreCase("Nước giải khát")) return "Nước giải khát";
+        }
+
+        String n = name.toLowerCase(Locale.ROOT);
+
+        if (n.contains("cafe") || n.contains("cà phê") || n.contains("bac xiu") || n.contains("bạc xỉu")) {
+            return "Cà phê";
+        }
+        if (n.contains("trà sữa") || n.contains("milk tea")) {
+            return "Trà sữa";
+        }
+        if (n.contains("trà đào") || n.contains("trà chanh") || n.contains("trà tắc") || n.contains("trà vải")) {
+            return "Trà trái cây";
+        }
+        if (n.contains("matcha") || n.contains("latte")) {
+            return "Matcha / Latte";
+        }
+        if (n.contains("nước") || n.contains("soda") || n.contains("chanh") || n.contains("cam")) {
+            return "Nước giải khát";
+        }
+
+        return "Nước giải khát";
+    }
+
+    private void applyFilters() {
         filteredProducts.clear();
 
-        if (keyword.isEmpty()) {
-            filteredProducts.addAll(allProducts);
-        } else {
-            String searchText = keyword.toLowerCase(Locale.ROOT);
+        String keyword = edtSearch.getText().toString().trim().toLowerCase(Locale.ROOT);
 
-            for (Product product : allProducts) {
-                String name = product.name != null ? product.name.toLowerCase(Locale.ROOT) : "";
-                String description = product.description != null ? product.description.toLowerCase(Locale.ROOT) : "";
-                String category = product.category != null ? product.category.toLowerCase(Locale.ROOT) : "";
+        for (Product product : allProducts) {
+            String name = product.name != null ? product.name.toLowerCase(Locale.ROOT) : "";
+            String description = product.description != null ? product.description.toLowerCase(Locale.ROOT) : "";
+            String category = product.category != null ? product.category.toLowerCase(Locale.ROOT) : "";
 
-                if (name.contains(searchText)
-                        || description.contains(searchText)
-                        || category.contains(searchText)) {
-                    filteredProducts.add(product);
-                }
+            boolean matchKeyword = keyword.isEmpty()
+                    || name.contains(keyword)
+                    || description.contains(keyword)
+                    || category.contains(keyword);
+
+            boolean matchCategory = selectedCategory.equals("Tất cả")
+                    || selectedCategory.equalsIgnoreCase(product.category);
+
+            if (matchKeyword && matchCategory) {
+                filteredProducts.add(product);
             }
         }
 
