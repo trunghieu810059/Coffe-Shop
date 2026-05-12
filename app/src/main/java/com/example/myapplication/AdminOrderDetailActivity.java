@@ -24,7 +24,7 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
 
     private TextView txtInfo;
     private LinearLayout itemsContainer;
-    private Button btnPlaced, btnPreparing, btnDelivered, btnCancelled, btnConfirmPaid;
+    private Button btnPlaced, btnPreparing, btnDelivering, btnDelivered, btnCancelled, btnConfirmPaid;
 
     private final DecimalFormat formatter = new DecimalFormat("#,###");
 
@@ -54,12 +54,14 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
         btnDelivered = findViewById(R.id.btnDelivered);
         btnCancelled = findViewById(R.id.btnCancelled);
         btnConfirmPaid = findViewById(R.id.btnConfirmPaid);
+        btnDelivering = findViewById(R.id.btnDelivering);
     }
 
     private void setupActions() {
         btnPlaced.setOnClickListener(v -> confirmUpdateStatus("PLACED"));
         btnPreparing.setOnClickListener(v -> confirmUpdateStatus("PREPARING"));
         btnDelivered.setOnClickListener(v -> confirmUpdateStatus("DELIVERED"));
+        btnDelivering.setOnClickListener(v -> confirmUpdateStatus("DELIVERING"));
         btnCancelled.setOnClickListener(v -> confirmUpdateStatus("CANCELLED"));
         btnConfirmPaid.setOnClickListener(v -> confirmMarkAsPaid());
     }
@@ -225,6 +227,7 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
         if ("paid".equalsIgnoreCase(status)) return "Đã đặt";
         if ("PLACED".equalsIgnoreCase(status)) return "Đã đặt";
         if ("PREPARING".equalsIgnoreCase(status)) return "Đang chuẩn bị";
+        if ("DELIVERING".equalsIgnoreCase(status) || "SHIPPING".equalsIgnoreCase(status)) return "Đang giao";
         if ("DELIVERED".equalsIgnoreCase(status)) return "Đã giao";
         if ("CANCELED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) return "Đã huỷ";
         return status;

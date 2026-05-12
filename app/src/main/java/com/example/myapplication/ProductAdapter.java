@@ -99,16 +99,17 @@ public class ProductAdapter extends ArrayAdapter<Product> {
             }
         });
 
-        // Nút Thêm -> mở chi tiết để chọn size/topping/số lượng
+        // Nút Thêm
         holder.btnAddToCart.setOnClickListener(v -> {
             Intent intent = new Intent(context, ProductDetailActivity.class);
             intent.putExtra("productId", p.docId);
             context.startActivity(intent);
         });
 
-        // Nút Đặt ngay -> đi thẳng sang thanh toán với mặc định
+        // Nút Đặt ngay
         holder.btnOrderNow.setOnClickListener(v -> {
             Intent intent = new Intent(context, CheckoutActivity.class);
+            intent.putExtra("productId", p.docId);
             intent.putExtra("productName", p.name);
             intent.putExtra("size", "M");
             intent.putExtra("topping", "Không");
@@ -117,7 +118,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
             context.startActivity(intent);
         });
 
-        // Bấm vào item hoặc ảnh -> mở chi tiết
+        // mở chi tiết
         view.setOnClickListener(v -> {
             Intent intent = new Intent(context, ProductDetailActivity.class);
             intent.putExtra("productId", p.docId);

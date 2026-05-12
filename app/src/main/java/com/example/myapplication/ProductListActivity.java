@@ -238,6 +238,10 @@ public class ProductListActivity extends AppCompatActivity {
                     allProducts.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        if ("info".equalsIgnoreCase(doc.getId())) {
+                            continue;
+                        }
+
                         Product product = mapDocumentToProduct(doc);
                         product.isFavorite = FavoriteManager.isFavorite(this, product.name);
                         allProducts.add(product);
@@ -253,16 +257,10 @@ public class ProductListActivity extends AppCompatActivity {
     private Product mapDocumentToProduct(QueryDocumentSnapshot doc) {
         String docId = doc.getId();
 
-        String name = doc.getString("Name");
-        if (name == null || name.trim().isEmpty()) {
-            name = docId;
-        }
+        String name = getStringSafe(doc, "Name", docId);
+        int price = getIntSafe(doc, "price", 0);
 
-        Long priceLong = doc.getLong("price");
-        int price = priceLong != null ? priceLong.intValue() : 0;
-
-        String imageName = doc.getString("imageName");
-        if (imageName == null) imageName = "";
+        String imageName = getStringSafe(doc, "imageName", "");
 
         int imgRes = 0;
         if (!imageName.isEmpty()) {
@@ -272,22 +270,14 @@ public class ProductListActivity extends AppCompatActivity {
             imgRes = R.mipmap.ic_launcher;
         }
 
-        String imageUrl = doc.getString("imageUrl");
-        if (imageUrl == null) imageUrl = "";
+        String imageUrl = getStringSafe(doc, "imageUrl", "");
+        String description = getStringSafe(doc, "description", "Thức uống thơm ngon, chuẩn vị quán");
 
-        String description = doc.getString("description");
-        if (description == null || description.trim().isEmpty()) {
-            description = "Thức uống thơm ngon, chuẩn vị quán";
-        }
-
-        String firestoreCategory = doc.getString("category");
+        String firestoreCategory = getStringSafe(doc, "category", "");
         String normalizedCategory = normalizeCategory(name, firestoreCategory);
 
-        Double ratingDouble = doc.getDouble("rating");
-        float rating = ratingDouble != null ? ratingDouble.floatValue() : 4.8f;
-
-        Long soldLong = doc.getLong("sold");
-        int sold = soldLong != null ? soldLong.intValue() : 120;
+        float rating = getFloatSafe(doc, "rating", 4.8f);
+        int sold = getIntSafe(doc, "sold", 120);
 
         return new Product(
                 docId,
@@ -301,6 +291,56 @@ public class ProductListActivity extends AppCompatActivity {
                 rating,
                 sold
         );
+    }
+
+    private int getIntSafe(QueryDocumentSnapshot doc, String fieldName, int defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private float getFloatSafe(QueryDocumentSnapshot doc, String fieldName, float defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Float.parseFloat(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private String getStringSafe(QueryDocumentSnapshot doc, String fieldName, String defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof String && !((String) value).trim().isEmpty()) {
+            return ((String) value).trim();
+        }
+
+        if (value instanceof Number) {
+            return String.valueOf(value);
+        }
+
+        return defaultValue;
     }
 
     private String normalizeCategory(String name, String firestoreCategory) {

@@ -167,7 +167,7 @@
                 android:background="@drawable/bg_button_pink"
                 android:text="Tất cả"
                 android:textAllCaps="false"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/black" />
 
             <Button
                 android:id="@+id/btnCatCoffee"
@@ -177,7 +177,7 @@
                 android:background="@drawable/bg_chip_outline"
                 android:text="Cà phê"
                 android:textAllCaps="false"
-                android:textColor="@color/white" />
+                android:textColor="@android:color/black" />
 
             <Button
                 android:id="@+id/btnCatMilkTea"
@@ -187,7 +187,7 @@
                 android:background="@drawable/bg_chip_outline"
                 android:text="Trà sữa"
                 android:textAllCaps="false"
-                android:textColor="@color/white" />
+                android:textColor="@android:color/black" />
 
             <Button
                 android:id="@+id/btnCatFruitTea"
@@ -197,7 +197,7 @@
                 android:background="@drawable/bg_chip_outline"
                 android:text="Trà trái cây"
                 android:textAllCaps="false"
-                android:textColor="@color/white" />
+                android:textColor="@android:color/black" />
 
             <Button
                 android:id="@+id/btnCatMatcha"
@@ -207,7 +207,7 @@
                 android:background="@drawable/bg_chip_outline"
                 android:text="Matcha"
                 android:textAllCaps="false"
-                android:textColor="@color/white" />
+                android:textColor="@android:color/black" />
 
             <Button
                 android:id="@+id/btnCatDrink"
@@ -216,7 +216,7 @@
                 android:background="@drawable/bg_chip_outline"
                 android:text=" Khác "
                 android:textAllCaps="false"
-                android:textColor="@color/white" />
+                android:textColor="@android:color/black" />
         </LinearLayout>
     </HorizontalScrollView>
 

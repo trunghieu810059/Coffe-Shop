@@ -8,6 +8,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,13 +19,18 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView imgProduct;
     private TextView txtName, txtDescription, txtPrice, txtQuantity;
     private TextView txtServiceInfo, txtAverageRating;
+    private LinearLayout recommendationContainer;
 
     private Button btnBack, btnAddToCart, btnOrderNow;
     private ImageButton btnMinus, btnPlus;
@@ -39,8 +45,13 @@ public class ProductDetailActivity extends AppCompatActivity {
     private int toppingExtra = 0;
 
     private String productName = "";
+    private String currentProductId = "";
+    private String currentCategory = "";
+    private String currentDescription = "";
+
     private String selectedSize = "M";
     private String selectedTopping = "Không";
+
 
     private final DecimalFormat formatter = new DecimalFormat("#,###");
 
@@ -72,6 +83,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         txtServiceInfo = findViewById(R.id.txtServiceInfo);
         txtAverageRating = findViewById(R.id.txtAverageRating);
+        recommendationContainer = findViewById(R.id.recommendationContainer);
 
         btnMinus = findViewById(R.id.btnMinus);
         btnPlus = findViewById(R.id.btnPlus);
@@ -123,6 +135,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void bindProductData(DocumentSnapshot doc) {
+        currentProductId = doc.getId();
         String name = doc.getString("Name");
         if (name == null || name.trim().isEmpty()) {
             name = "Sản phẩm";
@@ -132,9 +145,12 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (description == null || description.trim().isEmpty()) {
             description = "Chưa có mô tả";
         }
+        currentDescription = description;
 
-        Long priceLong = doc.getLong("price");
-        basePrice = priceLong != null ? priceLong.intValue() : 0;
+        String category = doc.getString("category");
+        currentCategory = category != null ? category : "";
+
+        basePrice = getIntSafe(doc, "price", 0);
 
         String imageName = doc.getString("imageName");
 
@@ -155,6 +171,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         productName = name;
         updatePriceText();
+        loadRecommendations();
     }
 
     private void loadReviewData() {
@@ -171,8 +188,8 @@ public class ProductDetailActivity extends AppCompatActivity {
                     int count = 0;
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Double ratingValue = doc.getDouble("rating");
-                        if (ratingValue != null) {
+                        float ratingValue = getFloatSafe(doc, "rating", 0f);
+                        if (ratingValue > 0f) {
                             totalRating += ratingValue;
                             count++;
                         }
@@ -252,6 +269,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         btnAddToCart.setOnClickListener(v -> {
             CartItem item = new CartItem(
+                    currentProductId,
                     productName,
                     selectedSize,
                     selectedTopping,
@@ -264,7 +282,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
 
         btnOrderNow.setOnClickListener(v -> {
+
             Intent intent = new Intent(ProductDetailActivity.this, CheckoutActivity.class);
+            intent.putExtra("productId", currentProductId);
             intent.putExtra("productName", productName);
             intent.putExtra("size", selectedSize);
             intent.putExtra("topping", selectedTopping);
@@ -272,6 +292,166 @@ public class ProductDetailActivity extends AppCompatActivity {
             intent.putExtra("unitPrice", getUnitPrice());
             startActivity(intent);
         });
+    }
+    private void loadRecommendations() {
+        if (recommendationContainer == null || currentProductId == null || currentProductId.trim().isEmpty()) {
+            return;
+        }
+
+        recommendationContainer.removeAllViews();
+
+        Set<String> currentFeatures = buildFeatureSet(productName, currentCategory, currentDescription, basePrice);
+
+        db.collection("Store")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<RecommendedProduct> results = new ArrayList<>();
+
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        if (doc.getId().equals(currentProductId) || "info".equalsIgnoreCase(doc.getId())) {
+                            continue;
+                        }
+
+                        String name = doc.getString("Name");
+                        if (name == null || name.trim().isEmpty()) {
+                            continue;
+                        }
+
+                        String category = doc.getString("category");
+                        String description = doc.getString("description");
+
+                        int price = getIntSafe(doc, "price", 0);
+
+                        Set<String> candidateFeatures = buildFeatureSet(name, category, description, price);
+                        double score = jaccardSimilarity(currentFeatures, candidateFeatures);
+
+                        if (score > 0) {
+                            results.add(new RecommendedProduct(doc.getId(), name, price, score));
+                        }
+                    }
+
+                    Collections.sort(results, (a, b) -> Double.compare(b.score, a.score));
+
+                    int limit = Math.min(3, results.size());
+                    for (int i = 0; i < limit; i++) {
+                        addRecommendationView(results.get(i));
+                    }
+                });
+    }
+
+    private Set<String> buildFeatureSet(String name, String category, String description, int price) {
+        Set<String> features = new HashSet<>();
+
+        addWords(features, name);
+        addWords(features, category);
+        addWords(features, description);
+
+        if (price > 0) {
+            if (price < 25000) {
+                features.add("price_low");
+            } else if (price <= 40000) {
+                features.add("price_medium");
+            } else {
+                features.add("price_high");
+            }
+        }
+
+        return features;
+    }
+
+    private void addWords(Set<String> features, String text) {
+        if (text == null) return;
+
+        String normalized = text.toLowerCase(Locale.ROOT)
+                .replaceAll("[^\\p{L}\\p{N}]+", " ")
+                .trim();
+
+        if (normalized.isEmpty()) return;
+
+        for (String word : normalized.split("\\s+")) {
+            if (word.length() >= 2) {
+                features.add(word);
+            }
+        }
+    }
+
+    private double jaccardSimilarity(Set<String> a, Set<String> b) {
+        if (a.isEmpty() || b.isEmpty()) return 0;
+
+        Set<String> intersection = new HashSet<>(a);
+        intersection.retainAll(b);
+
+        Set<String> union = new HashSet<>(a);
+        union.addAll(b);
+
+        return union.isEmpty() ? 0 : (double) intersection.size() / union.size();
+    }
+
+    private void addRecommendationView(RecommendedProduct product) {
+        TextView view = new TextView(this);
+
+        view.setText("• " + product.name + " - " + formatter.format(product.price) + "đ");
+        view.setTextColor(ContextCompat.getColor(this, R.color.pink_dark));
+        view.setTextSize(15);
+        view.setPadding(0, 8, 0, 8);
+
+        view.setOnClickListener(v -> {
+            Intent intent = new Intent(ProductDetailActivity.this, ProductDetailActivity.class);
+            intent.putExtra("productId", product.productId);
+            startActivity(intent);
+        });
+
+        recommendationContainer.addView(view);
+    }
+
+    private static class RecommendedProduct {
+        String productId;
+        String name;
+        int price;
+        double score;
+
+        RecommendedProduct(String productId, String name, int price, double score) {
+            this.productId = productId;
+            this.name = name;
+            this.price = price;
+            this.score = score;
+        }
+    }
+
+    private int getIntSafe(DocumentSnapshot doc, String fieldName, int defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private float getFloatSafe(DocumentSnapshot doc, String fieldName, float defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Float.parseFloat(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
     }
 
     private int getUnitPrice() {

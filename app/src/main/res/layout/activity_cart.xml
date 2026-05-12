@@ -29,7 +29,6 @@
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
-
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -64,13 +63,53 @@
         <ListView
             android:id="@+id/cartListView"
             android:layout_width="match_parent"
-            android:layout_height="380dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/bg_form_rounded"
+            android:layout_height="260dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_admin_filter_card"
+            android:clipToPadding="false"
             android:divider="@android:color/transparent"
-            android:dividerHeight="8dp"
-            android:padding="10dp"
-            android:scrollbars="none" />
+            android:dividerHeight="10dp"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="ifContentScrolls"
+            android:padding="8dp"
+            android:scrollbars="vertical" />
+
+        <!-- Gợi ý thêm -->
+        <LinearLayout
+            android:id="@+id/layoutCartRecommendations"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_form_rounded"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gợi ý thêm cho bạn"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Các món phù hợp với sản phẩm đang có trong giỏ hàng"
+                android:textColor="#777777"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/recommendationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+        </LinearLayout>
 
         <!-- Khung tổng kết -->
         <LinearLayout

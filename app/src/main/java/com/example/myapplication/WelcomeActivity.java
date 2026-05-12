@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -129,6 +130,10 @@ public class WelcomeActivity extends AppCompatActivity {
                     bestSellerList.clear();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        if ("info".equalsIgnoreCase(doc.getId())) {
+                            continue;
+                        }
+
                         Product product = mapDocumentToProduct(doc);
                         bestSellerList.add(product);
                     }
@@ -140,42 +145,28 @@ public class WelcomeActivity extends AppCompatActivity {
                 );
     }
 
-    private Product mapDocumentToProduct(QueryDocumentSnapshot doc) {
+    private Product mapDocumentToProduct(DocumentSnapshot doc) {
         String docId = doc.getId();
 
-        String name = doc.getString("Name");
-        if (name == null || name.trim().isEmpty()) {
-            name = docId;
-        }
+        String name = getStringSafe(doc, "Name", "Sản phẩm");
+        String description = getStringSafe(doc, "description", "");
+        String category = getStringSafe(doc, "category", "Khác");
 
-        String description = doc.getString("description");
-        if (description == null) description = "";
+        int price = getIntSafe(doc, "price", 0);
 
-        String category = doc.getString("category");
-        if (category == null || category.trim().isEmpty()) {
-            category = "Nước giải khát";
-        }
+        String imageName = getStringSafe(doc, "imageName", "");
+        String imageUrl = getStringSafe(doc, "imageUrl", "");
 
-        Long priceLong = doc.getLong("price");
-        int price = priceLong != null ? priceLong.intValue() : 0;
-
-        Long soldLong = doc.getLong("sold");
-        int sold = soldLong != null ? soldLong.intValue() : 0;
-
-        String imageName = doc.getString("imageName");
-        if (imageName == null) imageName = "";
-
-        int imgRes = 0;
+        int imageResId = 0;
         if (!imageName.isEmpty()) {
-            imgRes = getResources().getIdentifier(imageName, "drawable", getPackageName());
+            imageResId = getResources().getIdentifier(imageName, "drawable", getPackageName());
         }
-        if (imgRes == 0) imgRes = R.mipmap.ic_launcher;
+        if (imageResId == 0) {
+            imageResId = R.mipmap.ic_launcher;
+        }
 
-        String imageUrl = doc.getString("imageUrl");
-        if (imageUrl == null) imageUrl = "";
-
-        Double ratingDouble = doc.getDouble("rating");
-        float rating = ratingDouble != null ? ratingDouble.floatValue() : 4.8f;
+        float rating = getFloatSafe(doc, "rating", 0f);
+        int sold = getIntSafe(doc, "sold", 0);
 
         return new Product(
                 docId,
@@ -183,7 +174,7 @@ public class WelcomeActivity extends AppCompatActivity {
                 description,
                 category,
                 price,
-                imgRes,
+                imageResId,
                 imageName,
                 imageUrl,
                 rating,
@@ -224,5 +215,48 @@ public class WelcomeActivity extends AppCompatActivity {
         Intent intent = new Intent(WelcomeActivity.this, ProductDetailActivity.class);
         intent.putExtra("productId", p.docId);
         startActivity(intent);
+    }
+    private int getIntSafe(DocumentSnapshot doc, String fieldName, int defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private float getFloatSafe(DocumentSnapshot doc, String fieldName, float defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Float.parseFloat(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private String getStringSafe(DocumentSnapshot doc, String fieldName, String defaultValue) {
+        String value = doc.getString(fieldName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return value;
     }
 }

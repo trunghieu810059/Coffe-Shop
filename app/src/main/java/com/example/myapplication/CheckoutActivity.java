@@ -42,9 +42,10 @@ public class CheckoutActivity extends AppCompatActivity {
     private TextView txtMomoInfo, txtMomoTransferNote, txtMomoHint;
 
     private FirebaseFirestore db;
+    private String productId = "";
+    private String productName = "";
     private final DecimalFormat formatter = new DecimalFormat("#,###");
 
-    private String productName = "";
     private String size = "M";
     private String topping = "Không";
     private int quantity = 1;
@@ -166,11 +167,13 @@ public class CheckoutActivity extends AppCompatActivity {
         }
 
         productName = getIntent().getStringExtra("productName");
+        productId = getIntent().getStringExtra("productId");
         size = getIntent().getStringExtra("size");
         topping = getIntent().getStringExtra("topping");
         quantity = getIntent().getIntExtra("quantity", 1);
         unitPrice = getIntent().getIntExtra("unitPrice", 0);
 
+        if (productId == null) productId = "";
         if (productName == null) productName = "Sản phẩm";
         if (size == null) size = "M";
         if (topping == null) topping = "Không";
@@ -403,6 +406,7 @@ public class CheckoutActivity extends AppCompatActivity {
 
         ArrayList<Map<String, Object>> items = new ArrayList<>();
         Map<String, Object> item = new HashMap<>();
+        item.put("productId", productId);
         item.put("name", productName);
         item.put("size", size);
         item.put("topping", topping);
@@ -417,6 +421,7 @@ public class CheckoutActivity extends AppCompatActivity {
         db.collection("Orders")
                 .add(order)
                 .addOnSuccessListener(ref -> {
+                    updateSold(productId, productName, quantity);
                     AdminNoticeHelper.increaseOrderNotice();
                     showReviewDialog();
                 })
@@ -431,12 +436,14 @@ public class CheckoutActivity extends AppCompatActivity {
         ArrayList<Map<String, Object>> itemMaps = new ArrayList<>();
         for (CartItem item : cartItems) {
             Map<String, Object> map = new HashMap<>();
+            map.put("productId", item.productId);
             map.put("name", item.name);
             map.put("size", item.size);
             map.put("topping", item.topping);
             map.put("quantity", item.quantity);
             map.put("unitPrice", item.unitPrice);
             map.put("totalPrice", item.totalPrice);
+
             itemMaps.add(map);
         }
 
@@ -447,11 +454,8 @@ public class CheckoutActivity extends AppCompatActivity {
                 .add(order)
                 .addOnSuccessListener(unused -> {
                     for (CartItem item : cartItems) {
-                        db.collection("Store")
-                                .document(item.name)
-                                .update("sold", FieldValue.increment(item.quantity));
+                        updateSold(item.productId, item.name, item.quantity);
                     }
-
                     CartManager.clearCart(this);
                     AdminNoticeHelper.increaseOrderNotice();
                     Toast.makeText(this, "Đặt đơn thành công", Toast.LENGTH_SHORT).show();
@@ -481,5 +485,33 @@ public class CheckoutActivity extends AppCompatActivity {
                 })
                 .setCancelable(false)
                 .show();
+    }
+    private void updateSold(String productId, String productName, int quantity) {
+        if (quantity <= 0) return;
+
+        if (productId != null && !productId.trim().isEmpty()) {
+            db.collection("Store")
+                    .document(productId)
+                    .update("sold", com.google.firebase.firestore.FieldValue.increment(quantity))
+                    .addOnFailureListener(e -> updateSoldByName(productName, quantity));
+            return;
+        }
+
+        updateSoldByName(productName, quantity);
+    }
+
+    private void updateSoldByName(String productName, int quantity) {
+        if (productName == null || productName.trim().isEmpty()) return;
+
+        db.collection("Store")
+                .whereEqualTo("Name", productName)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        queryDocumentSnapshots.getDocuments().get(0).getReference()
+                                .update("sold", com.google.firebase.firestore.FieldValue.increment(quantity));
+                    }
+                });
     }
 }

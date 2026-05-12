@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -29,6 +30,7 @@ public class AdminOrderActivity extends AppCompatActivity {
 
     private final ArrayList<Order> allOrders = new ArrayList<>();
     private final ArrayList<Order> filteredOrders = new ArrayList<>();
+
     private AdminOrderAdapter adapter;
     private FirebaseFirestore db;
 
@@ -51,6 +53,7 @@ public class AdminOrderActivity extends AppCompatActivity {
             i.putExtra("orderId", o.orderId);
             startActivity(i);
         });
+
         rvOrders.setAdapter(adapter);
 
         setupSpinner();
@@ -68,6 +71,7 @@ public class AdminOrderActivity extends AppCompatActivity {
         statusOptions.add("Tất cả");
         statusOptions.add("Đã đặt");
         statusOptions.add("Đang chuẩn bị");
+        statusOptions.add("Đang giao");
         statusOptions.add("Đã giao");
         statusOptions.add("Đã huỷ");
 
@@ -76,6 +80,7 @@ public class AdminOrderActivity extends AppCompatActivity {
                 android.R.layout.simple_spinner_item,
                 statusOptions
         );
+
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerOrderStatus.setAdapter(spinnerAdapter);
 
@@ -116,21 +121,7 @@ public class AdminOrderActivity extends AppCompatActivity {
                     allOrders.clear();
 
                     for (QueryDocumentSnapshot doc : snaps) {
-                        Order o = new Order();
-                        o.orderId = doc.getId();
-                        o.username = doc.getString("username");
-                        o.customerName = doc.getString("customerName");
-                        o.phone = doc.getString("phone");
-                        o.address = doc.getString("address");
-                        o.status = doc.getString("status");
-                        if (o.status == null || o.status.trim().isEmpty()) o.status = "PLACED";
-
-                        Long finalL = doc.getLong("finalAmount");
-                        o.finalAmount = finalL != null ? finalL : 0;
-
-                        Long totalL = doc.getLong("totalAmount");
-                        o.totalAmount = totalL != null ? totalL : 0;
-
+                        Order o = mapDocumentToOrder(doc);
                         allOrders.add(o);
                     }
 
@@ -139,6 +130,22 @@ public class AdminOrderActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Lỗi tải đơn: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
+    }
+
+    private Order mapDocumentToOrder(DocumentSnapshot doc) {
+        Order o = new Order();
+
+        o.orderId = doc.getId();
+        o.username = getStringSafe(doc, "username", "");
+        o.customerName = getStringSafe(doc, "customerName", "Khách hàng");
+        o.phone = getStringSafe(doc, "phone", "");
+        o.address = getStringSafe(doc, "address", "");
+        o.status = getStringSafe(doc, "status", "PLACED");
+
+        o.finalAmount = getLongSafe(doc, "finalAmount", 0);
+        o.totalAmount = getLongSafe(doc, "totalAmount", 0);
+
+        return o;
     }
 
     private void filterOrders() {
@@ -160,21 +167,33 @@ public class AdminOrderActivity extends AppCompatActivity {
     }
 
     private boolean matchStatus(String orderStatus, String selectedStatus) {
-        if (selectedStatus.equals("Tất cả")) return true;
-
-        if (selectedStatus.equals("Đã đặt")) {
-            return "PLACED".equalsIgnoreCase(orderStatus) || "paid".equalsIgnoreCase(orderStatus);
+        if (orderStatus == null) {
+            orderStatus = "";
         }
 
-        if (selectedStatus.equals("Đang chuẩn bị")) {
+        if ("Tất cả".equals(selectedStatus)) {
+            return true;
+        }
+
+        if ("Đã đặt".equals(selectedStatus)) {
+            return "PLACED".equalsIgnoreCase(orderStatus)
+                    || "paid".equalsIgnoreCase(orderStatus);
+        }
+
+        if ("Đang chuẩn bị".equals(selectedStatus)) {
             return "PREPARING".equalsIgnoreCase(orderStatus);
         }
 
-        if (selectedStatus.equals("Đã giao")) {
+        if ("Đang giao".equals(selectedStatus)) {
+            return "DELIVERING".equalsIgnoreCase(orderStatus)
+                    || "SHIPPING".equalsIgnoreCase(orderStatus);
+        }
+
+        if ("Đã giao".equals(selectedStatus)) {
             return "DELIVERED".equalsIgnoreCase(orderStatus);
         }
 
-        if (selectedStatus.equals("Đã huỷ")) {
+        if ("Đã huỷ".equals(selectedStatus)) {
             return "CANCELED".equalsIgnoreCase(orderStatus)
                     || "CANCELLED".equalsIgnoreCase(orderStatus);
         }
@@ -183,7 +202,9 @@ public class AdminOrderActivity extends AppCompatActivity {
     }
 
     private boolean matchKeyword(Order o, String keyword) {
-        if (keyword.isEmpty()) return true;
+        if (keyword.isEmpty()) {
+            return true;
+        }
 
         String shortId = o.orderId != null && o.orderId.length() > 6
                 ? o.orderId.substring(0, 6).toLowerCase(Locale.ROOT)
@@ -199,5 +220,39 @@ public class AdminOrderActivity extends AppCompatActivity {
                 || customerName.contains(keyword)
                 || phone.contains(keyword)
                 || username.contains(keyword);
+    }
+
+    private String getStringSafe(DocumentSnapshot doc, String fieldName, String defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value == null) {
+            return defaultValue;
+        }
+
+        String text = String.valueOf(value).trim();
+
+        if (text.isEmpty()) {
+            return defaultValue;
+        }
+
+        return text;
+    }
+
+    private long getLongSafe(DocumentSnapshot doc, String fieldName, long defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Long.parseLong(((String) value).trim());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
     }
 }

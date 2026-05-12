@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 public class CartItem {
+    public String productId;
     public String name;
     public String size;
     public String topping;
@@ -11,6 +12,11 @@ public class CartItem {
     public int totalPrice;
 
     public CartItem(String name, String size, String topping, int quantity, int basePrice) {
+        this("", name, size, topping, quantity, basePrice);
+    }
+
+    public CartItem(String productId, String name, String size, String topping, int quantity, int basePrice) {
+        this.productId = productId;
         this.name = name;
         this.size = size;
         this.topping = topping;

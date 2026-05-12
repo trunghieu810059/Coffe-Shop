@@ -5,19 +5,19 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,15 +37,24 @@ public class RevenueActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private final DecimalFormat formatter = new DecimalFormat("#,###");
 
-    // filter mặc định: 7 ngày
+    // Mặc định xem 7 ngày gần nhất
     private int filterMode = 7;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        // Không bật EdgeToEdge để tránh layout bị tràn lên status bar nếu XML chưa xử lý inset.
         setContentView(R.layout.activity_revenue);
 
+        bindViews();
+        setupRecyclerView();
+        setupActions();
+
+        db = FirebaseFirestore.getInstance();
+        loadDashboard();
+    }
+
+    private void bindViews() {
         txtRevenueTotal = findViewById(R.id.txtRevenueTotal);
         txtDeliveredCount = findViewById(R.id.txtDeliveredCount);
         txtCancelledCount = findViewById(R.id.txtCancelledCount);
@@ -57,13 +66,15 @@ public class RevenueActivity extends AppCompatActivity {
         btnToday = findViewById(R.id.btnToday);
         btn7Days = findViewById(R.id.btn7Days);
         btnThisMonth = findViewById(R.id.btnThisMonth);
+    }
 
+    private void setupRecyclerView() {
         rvRevenueOrders.setLayoutManager(new LinearLayoutManager(this));
         adapter = new RevenueOrderAdapter(this, orders);
         rvRevenueOrders.setAdapter(adapter);
+    }
 
-        db = FirebaseFirestore.getInstance();
-
+    private void setupActions() {
         btnToday.setOnClickListener(v -> {
             filterMode = 1;
             loadDashboard();
@@ -78,148 +89,164 @@ public class RevenueActivity extends AppCompatActivity {
             filterMode = 30;
             loadDashboard();
         });
-
-        loadDashboard();
     }
 
     private void loadDashboard() {
-        Date start = getStartDate(filterMode);
-        Timestamp startTimestamp = new Timestamp(start);
-
-        loadDeliveredOrdersAndRevenue(startTimestamp);
-        loadPreparingCount();
-        loadCancelledCount();
-        loadTotalOrders();
+        loadOrdersAndRevenue();
         loadBestSeller();
     }
-    private void loadTotalOrders() {
-        db.collection("Orders")
-                .get()
-                .addOnSuccessListener(snaps -> {
-                    txtTotalOrders.setText(String.valueOf(snaps.size()));
-                })
-                .addOnFailureListener(e ->
-                        txtTotalOrders.setText("0")
-                );
-    }
 
-    private void loadDeliveredOrdersAndRevenue(Timestamp startTimestamp) {
+    private void loadOrdersAndRevenue() {
+        Date startDate = getStartDate(filterMode);
+
         db.collection("Orders")
-                .whereEqualTo("status", "DELIVERED")
-                .whereGreaterThanOrEqualTo("createdAt", startTimestamp)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snaps -> {
                     orders.clear();
 
                     long totalRevenue = 0;
-                    int deliveredCount = 0;
-
-                    for (QueryDocumentSnapshot doc : snaps) {
-                        Order o = new Order();
-                        o.orderId = doc.getId();
-
-                        Long finalL = doc.getLong("finalAmount");
-                        o.finalAmount = finalL != null ? finalL : 0;
-
-                        Long totalL = doc.getLong("totalAmount");
-                        o.totalAmount = totalL != null ? totalL : 0;
-
-                        totalRevenue += o.finalAmount;
-                        deliveredCount++;
-
-                        orders.add(o);
-                    }
-
-                    adapter.notifyDataSetChanged();
-
-                    txtDeliveredCount.setText(String.valueOf(deliveredCount));
-                    txtRevenueTotal.setText(
-                            "Tổng doanh thu: " + formatter.format(totalRevenue) + "đ (" + deliveredCount + " đơn)"
-                    );
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Lỗi tải doanh thu: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
-    }
-
-    private void loadPreparingCount() {
-        db.collection("Orders")
-                .whereEqualTo("status", "PREPARING")
-                .get()
-                .addOnSuccessListener(snaps -> {
-                    txtPreparingCount.setText(String.valueOf(snaps.size()));
-                })
-                .addOnFailureListener(e ->
-                        txtPreparingCount.setText("0")
-                );
-    }
-
-    private void loadCancelledCount() {
-        db.collection("Orders")
-                .get()
-                .addOnSuccessListener(snaps -> {
+                    int totalOrders = 0;
+                    int deliveredCountInFilter = 0;
+                    int preparingCount = 0;
                     int cancelledCount = 0;
 
                     for (QueryDocumentSnapshot doc : snaps) {
-                        String status = doc.getString("status");
+                        totalOrders++;
+
+                        String status = getStringSafe(doc, "status", "");
+
+                        if ("PREPARING".equalsIgnoreCase(status)) {
+                            preparingCount++;
+                        }
+
                         if ("CANCELLED".equalsIgnoreCase(status) || "CANCELED".equalsIgnoreCase(status)) {
                             cancelledCount++;
                         }
+
+                        if (!"DELIVERED".equalsIgnoreCase(status)) {
+                            continue;
+                        }
+
+                        Date createdDate = getDateSafe(doc, "createdAt");
+                        if (createdDate != null && createdDate.before(startDate)) {
+                            continue;
+                        }
+
+                        Order order = mapDocumentToOrder(doc);
+                        totalRevenue += order.finalAmount;
+                        deliveredCountInFilter++;
+                        orders.add(order);
                     }
 
+                    Collections.sort(orders, (o1, o2) -> {
+                        if (o1.createdAt == null && o2.createdAt == null) return 0;
+                        if (o1.createdAt == null) return 1;
+                        if (o2.createdAt == null) return -1;
+                        return o2.createdAt.compareTo(o1.createdAt);
+                    });
+
+                    adapter.notifyDataSetChanged();
+
+                    txtTotalOrders.setText(String.valueOf(totalOrders));
+                    txtDeliveredCount.setText(String.valueOf(deliveredCountInFilter));
+                    txtPreparingCount.setText(String.valueOf(preparingCount));
                     txtCancelledCount.setText(String.valueOf(cancelledCount));
+
+                    txtRevenueTotal.setText(
+                            "Tổng doanh thu: " + formatter.format(totalRevenue) + "đ (" + deliveredCountInFilter + " đơn)"
+                    );
                 })
-                .addOnFailureListener(e ->
-                        txtCancelledCount.setText("0")
-                );
+                .addOnFailureListener(e -> {
+                    resetDashboardValues();
+                    Toast.makeText(this, "Lỗi tải doanh thu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private Order mapDocumentToOrder(DocumentSnapshot doc) {
+        Order order = new Order();
+        order.orderId = doc.getId();
+        order.username = getStringSafe(doc, "username", "");
+        order.customerName = getStringSafe(doc, "customerName", "");
+        order.phone = getStringSafe(doc, "phone", "");
+        order.address = getStringSafe(doc, "address", "");
+        order.status = getStringSafe(doc, "status", "");
+        order.finalAmount = getLongSafe(doc, "finalAmount", 0L);
+        order.totalAmount = getLongSafe(doc, "totalAmount", 0L);
+        order.createdAt = getDateSafe(doc, "createdAt");
+        return order;
     }
 
     private void loadBestSeller() {
         db.collection("Store")
-                .orderBy("sold", Query.Direction.DESCENDING)
-                .limit(3)
                 .get()
                 .addOnSuccessListener(snaps -> {
-                    if (snaps.isEmpty()) {
+                    List<Map<String, Object>> products = new ArrayList<>();
+
+                    for (QueryDocumentSnapshot doc : snaps) {
+                        if ("info".equalsIgnoreCase(doc.getId())) {
+                            continue;
+                        }
+
+                        String name = getStringSafe(doc, "Name", "");
+                        if (name.trim().isEmpty()) {
+                            continue;
+                        }
+
+                        long sold = getLongSafe(doc, "sold", 0L);
+
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("name", name);
+                        item.put("sold", sold);
+                        products.add(item);
+                    }
+
+                    if (products.isEmpty()) {
                         txtBestSeller.setText("Chưa có");
                         return;
                     }
 
+                    Collections.sort(products, (a, b) -> {
+                        long soldA = (long) a.get("sold");
+                        long soldB = (long) b.get("sold");
+                        return Long.compare(soldB, soldA);
+                    });
+
                     StringBuilder result = new StringBuilder();
-                    int rank = 1;
+                    int limit = Math.min(3, products.size());
 
-                    for (QueryDocumentSnapshot doc : snaps) {
-                        String name = doc.getString("Name");
-                        Long sold = doc.getLong("sold");
-
-                        if (name == null || name.trim().isEmpty()) {
-                            name = "Chưa có tên";
-                        }
-
-                        if (sold == null) sold = 0L;
-
-                        result.append(rank)
+                    for (int i = 0; i < limit; i++) {
+                        Map<String, Object> item = products.get(i);
+                        result.append(i + 1)
                                 .append(". ")
-                                .append(name)
+                                .append(item.get("name"))
                                 .append(" (")
-                                .append(sold)
-                                .append(")\n");
+                                .append(item.get("sold"))
+                                .append(")");
 
-                        rank++;
+                        if (i < limit - 1) {
+                            result.append("\n");
+                        }
                     }
 
-                    txtBestSeller.setText(result.toString().trim());
+                    txtBestSeller.setText(result.toString());
                 })
-                .addOnFailureListener(e ->
-                        txtBestSeller.setText("Chưa có")
-                );
+                .addOnFailureListener(e -> txtBestSeller.setText("Chưa có"));
+    }
+
+    private void resetDashboardValues() {
+        txtTotalOrders.setText("0");
+        txtDeliveredCount.setText("0");
+        txtPreparingCount.setText("0");
+        txtCancelledCount.setText("0");
+        txtRevenueTotal.setText("Tổng doanh thu: 0đ");
+        orders.clear();
+        if (adapter != null) adapter.notifyDataSetChanged();
     }
 
     private Date getStartDate(int mode) {
         Calendar cal = Calendar.getInstance();
 
-        if (mode == 1) { // hôm nay
+        if (mode == 1) {
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
@@ -228,6 +255,56 @@ public class RevenueActivity extends AppCompatActivity {
         }
 
         cal.add(Calendar.DAY_OF_YEAR, -mode + 1);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+    private String getStringSafe(DocumentSnapshot doc, String fieldName, String defaultValue) {
+        Object value = doc.get(fieldName);
+        if (value == null) return defaultValue;
+        String text = String.valueOf(value).trim();
+        return text.isEmpty() ? defaultValue : text;
+    }
+
+    private long getLongSafe(DocumentSnapshot doc, String fieldName, long defaultValue) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                String cleaned = ((String) value)
+                        .replace("đ", "")
+                        .replace(",", "")
+                        .replace(".", "")
+                        .trim();
+
+                if (cleaned.isEmpty()) return defaultValue;
+                return Long.parseLong(cleaned);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private Date getDateSafe(DocumentSnapshot doc, String fieldName) {
+        Object value = doc.get(fieldName);
+
+        if (value instanceof Timestamp) {
+            return ((Timestamp) value).toDate();
+        }
+
+        if (value instanceof Date) {
+            return (Date) value;
+        }
+
+        return null;
     }
 }

@@ -28,6 +28,7 @@ public class RevenueOrderAdapter extends RecyclerView.Adapter<RevenueOrderAdapte
 
     static class VH extends RecyclerView.ViewHolder {
         TextView txtOrderId, txtTime, txtAmount;
+
         VH(@NonNull View itemView) {
             super(itemView);
             txtOrderId = itemView.findViewById(R.id.txtOrderId);
@@ -45,18 +46,25 @@ public class RevenueOrderAdapter extends RecyclerView.Adapter<RevenueOrderAdapte
 
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
-        Order o = list.get(position);
-        String shortId = (o.orderId != null && o.orderId.length() > 6) ? o.orderId.substring(0, 6) : o.orderId;
+        Order order = list.get(position);
+
+        String orderId = order.orderId != null ? order.orderId : "";
+        String shortId = orderId.length() > 6 ? orderId.substring(0, 6) : orderId;
+        if (shortId.trim().isEmpty()) shortId = "------";
 
         holder.txtOrderId.setText("Mã đơn: #" + shortId);
 
-        // createdAt bạn có thể lưu Timestamp -> ở đây mình chỉ hiển thị nếu bạn set thêm field stringTime
-        // Nếu bạn muốn chuẩn, mình sẽ hướng dẫn lấy Timestamp trong RevenueActivity luôn.
-        holder.txtTime.setText(o.phone != null ? "" : "");
+        if (order.createdAt != null) {
+            holder.txtTime.setText("Thời gian: " + sdf.format(order.createdAt));
+        } else {
+            holder.txtTime.setText("Thời gian: Chưa có");
+        }
 
-        holder.txtAmount.setText("+" + formatter.format(o.finalAmount) + "đ");
+        holder.txtAmount.setText("+" + formatter.format(order.finalAmount) + "đ");
     }
 
     @Override
-    public int getItemCount() { return list.size(); }
+    public int getItemCount() {
+        return list.size();
+    }
 }

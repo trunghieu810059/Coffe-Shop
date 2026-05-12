@@ -39,11 +39,11 @@ public class CartManager {
         loadCart(context);
 
         for (CartItem oldItem : cartList) {
-            boolean sameName = oldItem.name.equalsIgnoreCase(item.name);
+            boolean sameProduct = sameProduct(oldItem, item);
             boolean sameSize = oldItem.size.equalsIgnoreCase(item.size);
             boolean sameTopping = oldItem.topping.equalsIgnoreCase(item.topping);
 
-            if (sameName && sameSize && sameTopping) {
+            if (sameProduct && sameSize && sameTopping) {
                 oldItem.quantity += item.quantity;
                 oldItem.recalculatePrice();
                 saveCart(context);
@@ -81,11 +81,11 @@ public class CartManager {
             for (int j = i + 1; j < cartList.size(); j++) {
                 CartItem item2 = cartList.get(j);
 
-                boolean sameName = item1.name.equalsIgnoreCase(item2.name);
+                boolean sameProduct = sameProduct(item1, item2);
                 boolean sameSize = item1.size.equalsIgnoreCase(item2.size);
                 boolean sameTopping = item1.topping.equalsIgnoreCase(item2.topping);
 
-                if (sameName && sameSize && sameTopping) {
+                if (sameProduct && sameSize && sameTopping) {
                     item1.quantity += item2.quantity;
                     item1.recalculatePrice();
                     cartList.remove(j);
@@ -95,5 +95,14 @@ public class CartManager {
         }
 
         saveCart(context);
+    }
+    private static boolean sameProduct(CartItem a, CartItem b) {
+        if (a.productId != null && b.productId != null
+                && !a.productId.trim().isEmpty()
+                && !b.productId.trim().isEmpty()) {
+            return a.productId.equalsIgnoreCase(b.productId);
+        }
+
+        return a.name != null && b.name != null && a.name.equalsIgnoreCase(b.name);
     }
 }

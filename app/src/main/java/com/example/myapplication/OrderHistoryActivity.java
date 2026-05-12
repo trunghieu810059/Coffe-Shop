@@ -201,10 +201,11 @@ public class OrderHistoryActivity extends AppCompatActivity {
 
         if ("paid".equalsIgnoreCase(s)) return "Đã đặt";
         if ("PLACED".equalsIgnoreCase(s)) return "Đã đặt";
+        if ("PREPARING".equalsIgnoreCase(s)) return "Đang chuẩn bị";
+        if ("DELIVERING".equalsIgnoreCase(s) || "SHIPPING".equalsIgnoreCase(s)) return "Đang giao";
         if ("DELIVERED".equalsIgnoreCase(s)) return "Đã giao";
         if ("CANCELED".equalsIgnoreCase(s)) return "Đã huỷ";
         if ("CANCELLED".equalsIgnoreCase(s)) return "Đã huỷ";
-        if ("PREPARING".equalsIgnoreCase(s)) return "Đang chuẩn bị";
 
         return s;
     }
@@ -213,10 +214,11 @@ public class OrderHistoryActivity extends AppCompatActivity {
 
         if ("paid".equalsIgnoreCase(s)) return "Trạng thái: 🟡 Đã đặt";
         if ("PLACED".equalsIgnoreCase(s)) return "Trạng thái: 🟡 Đã đặt";
+        if ("PREPARING".equalsIgnoreCase(s)) return "Trạng thái: 🟠 Đang chuẩn bị";
+        if ("DELIVERING".equalsIgnoreCase(s) || "SHIPPING".equalsIgnoreCase(s)) return "Trạng thái: 🚚 Đang giao";
         if ("DELIVERED".equalsIgnoreCase(s)) return "Trạng thái: 🟢 Đã giao";
         if ("CANCELED".equalsIgnoreCase(s)) return "Trạng thái: 🔴 Đã huỷ";
         if ("CANCELLED".equalsIgnoreCase(s)) return "Trạng thái: 🔴 Đã huỷ";
-        if ("PREPARING".equalsIgnoreCase(s)) return "Trạng thái: 🟠 Đang chuẩn bị";
 
         return "Trạng thái: " + s;
     }

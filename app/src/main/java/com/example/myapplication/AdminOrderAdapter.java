@@ -69,6 +69,7 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.VH
         if ("DELIVERED".equalsIgnoreCase(s)) return "Đã giao";
         if ("CANCELED".equalsIgnoreCase(s)) return "Đã huỷ";
         if ("CANCELLED".equalsIgnoreCase(s)) return "Đã huỷ";
+        if ("DELIVERING".equalsIgnoreCase(s) || "SHIPPING".equalsIgnoreCase(s)) return "Đang giao";
 
         return s;
     }

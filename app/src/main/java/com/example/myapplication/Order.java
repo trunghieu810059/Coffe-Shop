@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import java.util.Date;
+
 public class Order {
     public String orderId;
     public String username;
@@ -9,6 +11,7 @@ public class Order {
     public String status;
     public long finalAmount;
     public long totalAmount;
+    public Date createdAt;
 
     public Order() {}
 }
